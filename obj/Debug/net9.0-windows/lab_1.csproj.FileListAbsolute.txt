@@ -1,0 +1,14 @@
+C:\repository\lab_1\lab_1\bin\Debug\net9.0-windows\lab_1.exe
+C:\repository\lab_1\lab_1\bin\Debug\net9.0-windows\lab_1.deps.json
+C:\repository\lab_1\lab_1\bin\Debug\net9.0-windows\lab_1.runtimeconfig.json
+C:\repository\lab_1\lab_1\bin\Debug\net9.0-windows\lab_1.dll
+C:\repository\lab_1\lab_1\bin\Debug\net9.0-windows\lab_1.pdb
+C:\repository\lab_1\lab_1\obj\Debug\net9.0-windows\lab_1.GeneratedMSBuildEditorConfig.editorconfig
+C:\repository\lab_1\lab_1\obj\Debug\net9.0-windows\lab_1.AssemblyInfoInputs.cache
+C:\repository\lab_1\lab_1\obj\Debug\net9.0-windows\lab_1.AssemblyInfo.cs
+C:\repository\lab_1\lab_1\obj\Debug\net9.0-windows\lab_1.csproj.CoreCompileInputs.cache
+C:\repository\lab_1\lab_1\obj\Debug\net9.0-windows\lab_1.dll
+C:\repository\lab_1\lab_1\obj\Debug\net9.0-windows\refint\lab_1.dll
+C:\repository\lab_1\lab_1\obj\Debug\net9.0-windows\lab_1.pdb
+C:\repository\lab_1\lab_1\obj\Debug\net9.0-windows\lab_1.genruntimeconfig.cache
+C:\repository\lab_1\lab_1\obj\Debug\net9.0-windows\ref\lab_1.dll
