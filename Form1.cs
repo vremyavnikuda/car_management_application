@@ -50,7 +50,13 @@ namespace CarManagementApp
         /// </summary>
         private void InitializeSortOptions()
         {
-            cmbSort.Items.AddRange(new string[] { "Марка", "Год", "Стоимость" });
+            cmbSort.Items.Clear();
+            cmbSort.Items.AddRange(new string[] {
+                "ФИО",
+                "Марка",
+                "Год",
+                "Стоимость"
+            });
             cmbSort.SelectedIndex = 0;
         }
 
@@ -91,12 +97,20 @@ namespace CarManagementApp
             string searchText = txtSearch.Text.ToLower();
             if (!string.IsNullOrWhiteSpace(searchText))
             {
-                cars = cars.Where(c => c.Brand.ToLower().Contains(searchText) || c.Model.ToLower().Contains(searchText));
+                cars = cars.Where(c => c.ClientName.ToLower().Contains(searchText) || c.Brand.ToLower().Contains(searchText));
             }
 
-            string sortOption = cmbSort.SelectedItem.ToString()!;
+            string sortOption = "ФИО"; // Значение по умолчанию
+            if (cmbSort.SelectedItem != null)
+            {
+                sortOption = cmbSort.SelectedItem.ToString()!;
+            }
+
             switch (sortOption)
             {
+                case "ФИО":
+                    cars = cars.OrderBy(c => c.ClientName);
+                    break;
                 case "Марка":
                     cars = cars.OrderBy(c => c.Brand);
                     break;
@@ -106,10 +120,76 @@ namespace CarManagementApp
                 case "Стоимость":
                     cars = cars.OrderBy(c => c.Cost);
                     break;
+                default:
+                    cars = cars.OrderBy(c => c.ClientName);
+                    break;
             }
 
+            _bindingSource.DataSource = null;
             _bindingSource.DataSource = cars.ToList();
             dgvCars.DataSource = _bindingSource;
+
+            // Настройка отображения колонок
+            dgvCars.Columns.Clear();
+
+            DataGridViewTextBoxColumn clientNameColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "ClientName",
+                HeaderText = "ФИО владельца",
+                Width = 150
+            };
+
+            DataGridViewTextBoxColumn brandColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Brand",
+                HeaderText = "Марка автомобиля",
+                Width = 120
+            };
+
+            DataGridViewTextBoxColumn creationDateColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "CreationDate",
+                HeaderText = "Дата создания",
+                Width = 120,
+                DefaultCellStyle = new DataGridViewCellStyle { Format = "dd.MM.yyyy" }
+            };
+
+            DataGridViewTextBoxColumn repairStartColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "RepairStartDate",
+                HeaderText = "Начало ремонта",
+                Width = 120,
+                DefaultCellStyle = new DataGridViewCellStyle { Format = "dd.MM.yyyy" }
+            };
+
+            DataGridViewTextBoxColumn repairEndColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "RepairEndDate",
+                HeaderText = "Окончание ремонта",
+                Width = 120,
+                DefaultCellStyle = new DataGridViewCellStyle { Format = "dd.MM.yyyy" }
+            };
+
+            DataGridViewTextBoxColumn costColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Cost",
+                HeaderText = "Стоимость работ",
+                Width = 100,
+                DefaultCellStyle = new DataGridViewCellStyle { Format = "C0" }
+            };
+
+            dgvCars.Columns.AddRange(new DataGridViewColumn[]
+            {
+                clientNameColumn,
+                brandColumn,
+                creationDateColumn,
+                repairStartColumn,
+                repairEndColumn,
+                costColumn
+            });
+
+            // Настройка контекстного меню
+            dgvCars.ContextMenuStrip = contextMenu;
         }
 
         /// <summary>
@@ -121,11 +201,20 @@ namespace CarManagementApp
         /// </remarks>
         private async Task AddCarAsync()
         {
-            CarEditForm editForm = new CarEditForm();
-            if (editForm.ShowDialog() == DialogResult.OK)
+            var form = new CarEditForm();
+            if (form.ShowDialog() == DialogResult.OK)
             {
-                await _carService.AddCarAsync(editForm.EditedCar);
-                await RefreshGridAsync();
+                try
+                {
+                    await _carService.AddCarAsync(form.EditedCar);
+                    await RefreshGridAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logService.LogErrorAsync($"Ошибка при добавлении автомобиля: {ex.Message}");
+                    MessageBox.Show($"Произошла ошибка при добавлении автомобиля: {ex.Message}",
+                        "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 
@@ -164,18 +253,35 @@ namespace CarManagementApp
         /// </remarks>
         private async Task DeleteCarAsync()
         {
-            if (dgvCars.CurrentRow?.DataBoundItem is Car selectedCar)
+            if (dgvCars.CurrentRow == null)
             {
-                var result = MessageBox.Show("Удалить выбранный автомобиль?", "Подтверждение", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (result == DialogResult.Yes)
+                MessageBox.Show("Выберите автомобиль для удаления", "Информация",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            Car selectedCar = dgvCars.CurrentRow.DataBoundItem as Car;
+            if (selectedCar == null) return;
+
+            DialogResult confirmResult = MessageBox.Show(
+                "Вы действительно хотите удалить карту клиента?",
+                "Подтверждение удаления",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (confirmResult == DialogResult.Yes)
+            {
+                try
                 {
                     await _carService.DeleteCarAsync(selectedCar.Id);
                     await RefreshGridAsync();
                 }
-            }
-            else
-            {
-                MessageBox.Show("Выберите автомобиль для удаления.", "Информация", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                catch (Exception ex)
+                {
+                    _logService.LogErrorAsync($"Ошибка при удалении автомобиля: {ex.Message}");
+                    MessageBox.Show($"Произошла ошибка при удалении автомобиля: {ex.Message}",
+                        "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 
@@ -268,6 +374,40 @@ namespace CarManagementApp
         private async void Form1_Load(object sender, EventArgs e)
         {
             await RefreshGridAsync();
+        }
+        private async void editMenuItem_Click(object sender, EventArgs e)
+        {
+            await EditCarAsync();
+        }
+
+        private async void deleteMenuItem_Click(object sender, EventArgs e)
+        {
+            await DeleteCarAsync();
+        }
+
+        private void infoMenuItem_Click(object sender, EventArgs e)
+        {
+            if (dgvCars.CurrentRow == null) return;
+
+            Car selectedCar = dgvCars.CurrentRow.DataBoundItem as Car;
+            if (selectedCar == null) return;
+
+            // Создание формы информации и показ её в режиме только для чтения
+            var form = new CarEditForm(selectedCar);
+            // Делаем поля недоступными для редактирования
+            foreach (Control control in form.Controls)
+            {
+                if (control is TextBox || control is NumericUpDown || control is DateTimePicker)
+                {
+                    control.Enabled = false;
+                }
+            }
+            // Скрываем кнопки сохранения и отмены
+            form.Controls["btnSave"].Visible = false;
+            form.Controls["btnCancel"].Visible = false;
+
+            form.Text = "Информация о клиенте";
+            form.ShowDialog();
         }
     }
 }

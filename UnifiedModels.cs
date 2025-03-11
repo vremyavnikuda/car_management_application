@@ -274,6 +274,7 @@ namespace CarManagementApp.Models
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
+
         /// <summary>
         /// Вызывает событие <see cref="PropertyChanged"/>, если оно не равно null.
         /// </summary>
@@ -332,6 +333,15 @@ namespace CarManagementApp.Models
         private double maintenanceIntervalKm;
         private string ownerName;
         private string licensePlate;
+        private string clientName;
+        private string phoneNumber;
+        private string issue;
+        private DateTime creationDate;
+        private DateTime repairStartDate;
+        private DateTime repairEndDate;
+        private string diagnosis;
+        private string repairPerson;
+        private string fullCarInfo;
 
         /// <summary>
         /// Инициализирует новый экземпляр <see cref="Car"/>,
@@ -354,6 +364,15 @@ namespace CarManagementApp.Models
             maintenanceIntervalKm = 10000;
             ownerName = "Не указан";
             licensePlate = "Не указан";
+            clientName = "Неизвестно";
+            phoneNumber = "Неизвестно";
+            issue = "Неизвестно";
+            creationDate = DateTime.Now;
+            repairStartDate = DateTime.MinValue;
+            repairEndDate = DateTime.MinValue;
+            diagnosis = "Не указан";
+            repairPerson = "Не указан";
+            fullCarInfo = "Не указана";
         }
 
         /// <summary>
@@ -422,6 +441,65 @@ namespace CarManagementApp.Models
             get => fuelType;
             set => SetProperty(ref fuelType, value);
         }
+
+
+        //-----------------------------------------------------------------------
+        public string ClientName
+        {
+            get => clientName;
+            set => SetProperty(ref clientName, value);
+        }
+
+        public string PhoneNumber
+        {
+            get => phoneNumber;
+            set => SetProperty(ref phoneNumber, value);
+        }
+
+        public string Issue
+        {
+            get => issue;
+            set => SetProperty(ref issue, value);
+        }
+
+        public DateTime CreationDate
+        {
+            get => creationDate;
+            set => SetProperty(ref creationDate, value);
+        }
+
+        public DateTime RepairStartDate
+        {
+            get => repairStartDate;
+            set => SetProperty(ref repairStartDate, value);
+        }
+
+        public DateTime RepairEndDate
+        {
+            get => repairEndDate;
+            set => SetProperty(ref repairEndDate, value);
+        }
+
+        public string Diagnosis
+        {
+            get => diagnosis;
+            set => SetProperty(ref diagnosis, value);
+        }
+
+        public string RepairPerson
+        {
+            get => repairPerson;
+            set => SetProperty(ref repairPerson, value);
+        }
+
+        public string FullCarInfo
+        {
+            get => fullCarInfo;
+            set => SetProperty(ref fullCarInfo, value);
+        }
+
+        //-----------------------------------------------------------------------
+
 
         public int Doors
         {
@@ -495,7 +573,10 @@ namespace CarManagementApp.Models
         public string FullName => $"{Brand} {Model} ({YearOfManufacture})";
 
         public bool MaintenanceDue => DateTime.Now > nextMaintenanceDate ||
-            (serviceHistory.Count > 0 ? (serviceHistory[serviceHistory.Count - 1].Odometer + maintenanceIntervalKm < Mileage) : true);
+                                      (serviceHistory.Count > 0
+                                          ? (serviceHistory[serviceHistory.Count - 1].Odometer + maintenanceIntervalKm <
+                                             Mileage)
+                                          : true);
 
         /// <summary>
         /// Возвращает строку с подробной информацией об автомобиле.
@@ -685,6 +766,7 @@ namespace CarManagementApp.Models
                 totalFuel += fuelRecords[i].Liters;
                 totalDistance += fuelRecords[i].Odometer - fuelRecords[i - 1].Odometer;
             }
+
             return totalDistance == 0 ? 0 : (totalFuel / totalDistance) * 100;
         }
 
@@ -718,6 +800,7 @@ namespace CarManagementApp.Models
             {
                 totalDistance += locationHistory[i - 1].CalculateDistance(locationHistory[i]);
             }
+
             return totalDistance;
         }
 
@@ -867,30 +950,40 @@ namespace CarManagementApp.Models
     [Serializable]
     public class VehicleException : Exception
     {
-        public VehicleException(string message) : base(message) { }
+        public VehicleException(string message) : base(message)
+        {
+        }
     }
 
     [Serializable]
     public class PowerNegativeException : VehicleException
     {
-        public PowerNegativeException(string message) : base(message) { }
+        public PowerNegativeException(string message) : base(message)
+        {
+        }
     }
 
     [Serializable]
     public class CostNegativeException : VehicleException
     {
-        public CostNegativeException(string message) : base(message) { }
+        public CostNegativeException(string message) : base(message)
+        {
+        }
     }
 
     [Serializable]
     public class LicensePlateFormatException : VehicleException
     {
-        public LicensePlateFormatException(string message) : base(message) { }
+        public LicensePlateFormatException(string message) : base(message)
+        {
+        }
     }
 
     [Serializable]
     public class VINFormatException : VehicleException
     {
-        public VINFormatException(string message) : base(message) { }
+        public VINFormatException(string message) : base(message)
+        {
+        }
     }
 }

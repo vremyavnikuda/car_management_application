@@ -77,6 +77,11 @@
         /// </summary>
         private System.Windows.Forms.DataGridView dgvCars;
 
+        private System.Windows.Forms.ContextMenuStrip contextMenu;
+        private System.Windows.Forms.ToolStripMenuItem editMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem deleteMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem infoMenuItem;
+
 
         /// <summary>
         /// Освобождает все используемые ресурсы, как управляемые, так и неуправляемые.
@@ -101,6 +106,43 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.dgvCars = new System.Windows.Forms.DataGridView();
+
+            this.contextMenu = new System.Windows.Forms.ContextMenuStrip();
+            this.editMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.deleteMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.infoMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+
+
+            //
+            // contextMenu
+            //
+            this.contextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+                this.editMenuItem,
+                this.deleteMenuItem,
+                this.infoMenuItem});
+            //
+            // editMenuItem
+            //
+            this.editMenuItem.Text = "Редактировать";
+            this.editMenuItem.Click += new System.EventHandler(this.editMenuItem_Click);
+            //
+            // deleteMenuItem
+            //
+            this.deleteMenuItem.Text = "Удалить";
+            this.deleteMenuItem.Click += new System.EventHandler(this.deleteMenuItem_Click);
+            //
+            // infoMenuItem
+            //
+            this.infoMenuItem.Text = "Информация";
+            this.infoMenuItem.Click += new System.EventHandler(this.infoMenuItem_Click);
+
+            //
+            // dgvCars
+            //
+            this.dgvCars.ContextMenuStrip = this.contextMenu;
+
+
             this.panelTop = new System.Windows.Forms.Panel();
             this.lblSearch = new System.Windows.Forms.Label();
             this.txtSearch = new System.Windows.Forms.TextBox();
@@ -114,7 +156,6 @@
             this.btnImportXml = new System.Windows.Forms.Button();
             this.btnExportXml = new System.Windows.Forms.Button();
             this.btnGenerateReport = new System.Windows.Forms.Button();
-            this.dgvCars = new System.Windows.Forms.DataGridView();
             this.panelTop.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvCars)).BeginInit();
             this.SuspendLayout();
@@ -169,67 +210,71 @@
             //
             // btnAdd
             //
+            this.btnAdd.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.btnAdd.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnAdd.Location = new System.Drawing.Point(10, 35);
             this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(70, 23);
-            this.btnAdd.Text = "Добавить";
-            this.btnAdd.TabIndex = 3;
+            this.btnAdd.Size = new System.Drawing.Size(90, 23);
+            this.btnAdd.TabIndex = 4;
+            this.btnAdd.Text = "Создать";
+            this.btnAdd.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnAdd.UseVisualStyleBackColor = true;
             //
             // btnEdit
             //
-            this.btnEdit.Location = new System.Drawing.Point(90, 35);
+            this.btnEdit.Location = new System.Drawing.Point(110, 35);
             this.btnEdit.Name = "btnEdit";
-            this.btnEdit.Size = new System.Drawing.Size(70, 23);
+            this.btnEdit.Size = new System.Drawing.Size(90, 23);
             this.btnEdit.Text = "Редактировать";
-            this.btnEdit.TabIndex = 4;
+            this.btnEdit.TabIndex = 5;
             //
             // btnDelete
             //
-            this.btnDelete.Location = new System.Drawing.Point(170, 35);
+            this.btnDelete.Location = new System.Drawing.Point(210, 35);
             this.btnDelete.Name = "btnDelete";
-            this.btnDelete.Size = new System.Drawing.Size(70, 23);
+            this.btnDelete.Size = new System.Drawing.Size(90, 23);
             this.btnDelete.Text = "Удалить";
-            this.btnDelete.TabIndex = 5;
+            this.btnDelete.TabIndex = 6;
             //
             // btnImportJson
             //
-            this.btnImportJson.Location = new System.Drawing.Point(250, 35);
+            this.btnImportJson.Location = new System.Drawing.Point(310, 35);
             this.btnImportJson.Name = "btnImportJson";
             this.btnImportJson.Size = new System.Drawing.Size(90, 23);
             this.btnImportJson.Text = "Импорт JSON";
-            this.btnImportJson.TabIndex = 6;
+            this.btnImportJson.TabIndex = 7;
             //
             // btnExportJson
             //
-            this.btnExportJson.Location = new System.Drawing.Point(345, 35);
+            this.btnExportJson.Location = new System.Drawing.Point(410, 35);
             this.btnExportJson.Name = "btnExportJson";
             this.btnExportJson.Size = new System.Drawing.Size(90, 23);
             this.btnExportJson.Text = "Экспорт JSON";
-            this.btnExportJson.TabIndex = 7;
+            this.btnExportJson.TabIndex = 8;
             //
             // btnImportXml
             //
-            this.btnImportXml.Location = new System.Drawing.Point(440, 35);
+            this.btnImportXml.Location = new System.Drawing.Point(510, 35);
             this.btnImportXml.Name = "btnImportXml";
             this.btnImportXml.Size = new System.Drawing.Size(90, 23);
             this.btnImportXml.Text = "Импорт XML";
-            this.btnImportXml.TabIndex = 8;
+            this.btnImportXml.TabIndex = 9;
             //
             // btnExportXml
             //
-            this.btnExportXml.Location = new System.Drawing.Point(535, 35);
+            this.btnExportXml.Location = new System.Drawing.Point(610, 35);
             this.btnExportXml.Name = "btnExportXml";
             this.btnExportXml.Size = new System.Drawing.Size(90, 23);
             this.btnExportXml.Text = "Экспорт XML";
-            this.btnExportXml.TabIndex = 9;
+            this.btnExportXml.TabIndex = 10;
             //
             // btnGenerateReport
             //
-            this.btnGenerateReport.Location = new System.Drawing.Point(630, 35);
+            this.btnGenerateReport.Location = new System.Drawing.Point(710, 35);
             this.btnGenerateReport.Name = "btnGenerateReport";
-            this.btnGenerateReport.Size = new System.Drawing.Size(120, 23);
+            this.btnGenerateReport.Size = new System.Drawing.Size(90, 23);
             this.btnGenerateReport.Text = "Сгенерировать отчет";
-            this.btnGenerateReport.TabIndex = 10;
+            this.btnGenerateReport.TabIndex = 11;
             //
             // dgvCars
             //
@@ -240,7 +285,13 @@
             this.dgvCars.Location = new System.Drawing.Point(0, 60);
             this.dgvCars.Name = "dgvCars";
             this.dgvCars.Size = new System.Drawing.Size(800, 390);
-            this.dgvCars.TabIndex = 11;
+            this.dgvCars.TabIndex = 12;
+            this.dgvCars.Columns.Add("ClientName", "ФИО");
+            this.dgvCars.Columns.Add("Brand", "Марка");
+            this.dgvCars.Columns.Add("CreationDate", "Дата создания");
+            this.dgvCars.Columns.Add("RepairStartDate", "Дата начала ремонта");
+            this.dgvCars.Columns.Add("RepairEndDate", "Дата окончания ремонта");
+            this.dgvCars.Columns.Add("Cost", "Стоимость");
             //
             // Form1
             //
@@ -254,6 +305,16 @@
             this.panelTop.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvCars)).EndInit();
             this.ResumeLayout(false);
+
+            // Set all buttons to use the same font as btnEdit
+            System.Drawing.Font defaultButtonFont = this.btnEdit.Font;
+            this.btnAdd.Font = defaultButtonFont;
+            this.btnDelete.Font = defaultButtonFont;
+            this.btnImportJson.Font = defaultButtonFont;
+            this.btnExportJson.Font = defaultButtonFont;
+            this.btnImportXml.Font = defaultButtonFont;
+            this.btnExportXml.Font = defaultButtonFont;
+            this.btnGenerateReport.Font = defaultButtonFont;
         }
 
         #endregion
