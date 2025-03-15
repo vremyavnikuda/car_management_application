@@ -68,10 +68,13 @@ namespace CarManagementApp
             this.helpToolStripMenuItem.Click += new EventHandler(ShowHelp);
 
             // Настройка панели инструментов
-            this.toolStrip = new ToolStrip();
-            this.toolStrip.Items.AddRange(new ToolStripItem[] {
-                addButton, editButton, deleteButton
-            });
+            // 3 дополнительные кнопки на панели управления
+            //this.toolStrip = new ToolStrip();
+            // this.toolStrip.Items.AddRange(new ToolStripItem[] {
+            //     addButton, editButton, deleteButton
+            // });
+
+            this.toolStrip.Visible = false;
 
             this.addButton = new ToolStripButton();
             this.addButton.Text = "Добавить";
@@ -239,12 +242,8 @@ namespace CarManagementApp
         private void ShowHelp(object sender, EventArgs e)
         {
             MessageBox.Show(
-                "Приложение для управления автомобилями\n\n" +
-                "- Добавить: создание нового автомобиля\n" +
-                "- Редактировать: изменение данных выбранного автомобиля\n" +
-                "- Удалить: удаление выбранного автомобиля\n\n" +
-                "Для выбора автомобиля кликните на него в списке слева.",
-                "Справка"
+                "Andrew Nevsky\n\n" +
+                "github.com/vremyavnikuda\n"
             );
         }
 
