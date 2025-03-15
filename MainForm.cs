@@ -20,6 +20,7 @@ namespace CarManagementApp
 
         private void InitializeComponent()
         {
+            // Создание компонентов
             this.menuStrip = new MenuStrip();
             this.fileToolStripMenuItem = new ToolStripMenuItem();
             this.addToolStripMenuItem = new ToolStripMenuItem();
@@ -46,12 +47,15 @@ namespace CarManagementApp
             this.Size = new Size(800, 600);
 
             // Настройка меню
-            this.menuStrip.Items.AddRange(new ToolStripItem[] {
+            this.menuStrip.Items.AddRange(new ToolStripItem[]
+            {
                 fileToolStripMenuItem, helpToolStripMenuItem
             });
+            this.menuStrip.Dock = DockStyle.Top; // Добавлено: меню всегда сверху
 
             this.fileToolStripMenuItem.Text = "Файл";
-            this.fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] {
+            this.fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+            {
                 addToolStripMenuItem, editToolStripMenuItem, deleteToolStripMenuItem
             });
 
@@ -67,13 +71,7 @@ namespace CarManagementApp
             this.helpToolStripMenuItem.Text = "Справка";
             this.helpToolStripMenuItem.Click += new EventHandler(ShowHelp);
 
-            // Настройка панели инструментов
-            // 3 дополнительные кнопки на панели управления
-            //this.toolStrip = new ToolStrip();
-            // this.toolStrip.Items.AddRange(new ToolStripItem[] {
-            //     addButton, editButton, deleteButton
-            // });
-
+            // Настройка панели инструментов (скрыта)
             this.toolStrip.Visible = false;
 
             this.addButton = new ToolStripButton();
@@ -91,46 +89,62 @@ namespace CarManagementApp
             // Настройка списка автомобилей
             this.carListBox.Location = new Point(10, 70);
             this.carListBox.Size = new Size(300, 450);
+            this.carListBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left; // Добавлено: растягивается по вертикали
             this.carListBox.SelectedIndexChanged += new EventHandler(CarSelected);
 
             // Настройка панели деталей
             this.detailsPanel.Location = new Point(320, 70);
             this.detailsPanel.Size = new Size(450, 450);
+            this.detailsPanel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right; // Добавлено: растягивается по вертикали и горизонтали
             this.detailsPanel.BorderStyle = BorderStyle.FixedSingle;
 
-            // Добавление элементов на панель деталей
+            // Добавление элементов на панель деталей с настройкой Anchor
             this.brandLabel.Location = new Point(10, 10);
             this.brandLabel.Size = new Size(430, 20);
+            this.brandLabel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
             this.powerLabel.Location = new Point(10, 40);
             this.powerLabel.Size = new Size(430, 20);
+            this.powerLabel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
             this.costLabel.Location = new Point(10, 70);
             this.costLabel.Size = new Size(430, 20);
+            this.costLabel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
             this.typeLabel.Location = new Point(10, 100);
             this.typeLabel.Size = new Size(430, 20);
+            this.typeLabel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
             this.repairDatesLabel.Location = new Point(10, 130);
             this.repairDatesLabel.Text = "Даты ремонта:";
             this.repairDatesLabel.Size = new Size(430, 20);
+            this.repairDatesLabel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
 
             this.repairDatesListBox.Location = new Point(10, 160);
             this.repairDatesListBox.Size = new Size(430, 200);
+            this.repairDatesListBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
             this.ownerNameLabel.Location = new Point(10, 370);
             this.ownerNameLabel.Size = new Size(430, 20);
             this.ownerNameLabel.Text = "ФИО Владельца:";
+            this.ownerNameLabel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
             this.ownerNameTextBox.Location = new Point(10, 400);
             this.ownerNameTextBox.Size = new Size(430, 20);
             this.ownerNameTextBox.ReadOnly = true;
+            this.ownerNameTextBox.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
             // Добавление элементов на панель деталей
-            this.detailsPanel.Controls.AddRange(new Control[] {
+            this.detailsPanel.Controls.AddRange(new Control[]
+            {
                 brandLabel, powerLabel, costLabel, typeLabel,
                 repairDatesLabel, repairDatesListBox,
                 ownerNameLabel, ownerNameTextBox
             });
 
             // Добавление элементов на форму
-            this.Controls.AddRange(new Control[] {
+            this.Controls.AddRange(new Control[]
+            {
                 menuStrip, toolStrip, carListBox, detailsPanel
             });
             this.MainMenuStrip = this.menuStrip;
@@ -176,7 +190,7 @@ namespace CarManagementApp
             repairDatesListBox.Items.Clear();
         }
 
-        private void CarSelected(object sender, EventArgs e)
+        private void CarSelected(object? sender, EventArgs e)
         {
             if (carListBox.SelectedIndex >= 0)
             {
@@ -185,7 +199,7 @@ namespace CarManagementApp
             }
         }
 
-        private void AddCar(object sender, EventArgs e)
+        private void AddCar(object? sender, EventArgs e)
         {
             CarDialog dialog = new CarDialog();
             if (dialog.ShowDialog() == DialogResult.OK)
@@ -196,7 +210,7 @@ namespace CarManagementApp
             }
         }
 
-        private void EditCar(object sender, EventArgs e)
+        private void EditCar(object? sender, EventArgs e)
         {
             if (carListBox.SelectedIndex >= 0)
             {
@@ -214,18 +228,19 @@ namespace CarManagementApp
             }
             else
             {
-                MessageBox.Show("Выберите автомобиль для редактирования", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Выберите автомобиль для редактирования", "Ошибка", MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 
-        private void DeleteCar(object sender, EventArgs e)
+        private void DeleteCar(object? sender, EventArgs e)
         {
             if (carListBox.SelectedIndex >= 0)
             {
                 Car selectedCar = carCollection.GetCar(carListBox.SelectedIndex);
 
                 if (MessageBox.Show($"Вы уверены, что хотите удалить {selectedCar.Brand}?",
-                    "Подтверждение удаления", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                        "Подтверждение удаления", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
                     carCollection.RemoveCar(selectedCar);
                     carCollection.SaveToFile(dataFilePath);
@@ -239,7 +254,7 @@ namespace CarManagementApp
             }
         }
 
-        private void ShowHelp(object sender, EventArgs e)
+        private void ShowHelp(object? sender, EventArgs e)
         {
             MessageBox.Show(
                 "Andrew Nevsky\n\n" +

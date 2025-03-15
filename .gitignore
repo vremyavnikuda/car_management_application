@@ -826,3 +826,12 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
+bin/Debug/net9.0-windows/lab_1.dll
+/bin
+/bin
+*.exe
+bin/Debug/net9.0-windows/lab_1.dll
+*.pdb
+/bin
+/obj
+obj/
