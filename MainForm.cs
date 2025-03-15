@@ -167,7 +167,7 @@ namespace CarManagementApp
                 return;
             }
 
-            brandLabel.Text = $"Марка: {car.Brand}";
+            brandLabel.Text = $"Марка: {car.Brand} {car.Model}";
             powerLabel.Text = $"Мощность: {car.Power} л.с.";
             costLabel.Text = $"Стоимость: {car.Cost:C}";
             typeLabel.Text = $"Тип: {car.CarType}";
@@ -239,7 +239,7 @@ namespace CarManagementApp
             {
                 Car selectedCar = carCollection.GetCar(carListBox.SelectedIndex);
 
-                if (MessageBox.Show($"Вы уверены, что хотите удалить {selectedCar.Brand}?",
+                if (MessageBox.Show($"Вы уверены, что хотите удалить {selectedCar.OwnerName} {selectedCar.Brand}?",
                         "Подтверждение удаления", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
                     carCollection.RemoveCar(selectedCar);

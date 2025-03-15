@@ -248,10 +248,16 @@ namespace CarManagementApp.Models
             }
         }
 
+        // public override string GetInfo()
+        // {
+        //     return
+        //         $"Марка: {Brand}, Модель: {Model}, Тип: {CarType}, Мощность: {Power} л.с., Стоимость: {Cost:C}, Владелец: {OwnerName}";
+        // }
+
         public override string GetInfo()
         {
             return
-                $"Марка: {Brand}, Модель: {Model}, Тип: {CarType}, Мощность: {Power} л.с., Стоимость: {Cost:C}, Владелец: {OwnerName}";
+                $"{OwnerName}: {Brand} {Model}";
         }
 
         public override decimal CalculateDepreciation()
