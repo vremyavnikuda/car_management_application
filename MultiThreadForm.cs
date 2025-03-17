@@ -81,29 +81,57 @@ namespace CarManagementApp
 
         private void InitializeMovingCars()
         {
-            // Создание случайного числа объектов от 5 до 10 для каждого типа
-            int countType1 = rnd.Next(5, 11);
-            int countType2 = rnd.Next(5, 11);
-
-            // Тип 1: объекты движутся в верхнюю левую четверть (0,0) до (w/2, h/2)
-            for (int i = 0; i < countType1; i++)
+            try
             {
-                MovingCar car = new MovingCar("Mazda", 150, 1000000, CarType.Sedan, "Type1");
-                car.CurrentPosition = new PointF(rnd.Next(0, displayWidth / 2), rnd.Next(0, displayHeight / 2));
-                car.Destination = new PointF(rnd.Next(0, displayWidth / 2), rnd.Next(0, displayHeight / 2));
-                // Загрузка изображения (можно использовать Image.FromFile("path")) – для примера не добавляем.
-                movingCarsType1.Add(car);
+                // Загружаем коллекцию автомобилей из файла "cars.json"
+                CarCollection carCollection = new CarCollection();
+                carCollection.LoadFromFile("cars.json");
+                var cars = carCollection.GetAllCars();
+
+                // Если автомобилей нет, выводим предупреждение
+                if (cars.Count == 0)
+                {
+                    MessageBox.Show("В коллекции нет автомобилей. Добавьте автомобили в главное окно.",
+                        "Предупреждение");
+                    return;
+                }
+
+                // Разбиваем список на две части: первая половина – для верхней левой четверти, вторая – для нижней правой
+                int halfCount = cars.Count / 2;
+
+                for (int i = 0; i < cars.Count; i++)
+                {
+                    var car = cars[i];
+
+                    // Создаём MovingCar, используя свойства базового объекта Car
+                    MovingCar movingCar = new MovingCar(car.Brand, car.Power, car.Cost, car.CarType, car.OwnerName);
+
+                    // При необходимости можно скопировать и другие свойства, например пробег, модель и т.д.
+                    if (i < halfCount)
+                    {
+                        // Верхняя левая четверть (0,0) до (displayWidth/2, displayHeight/2)
+                        movingCar.CurrentPosition =
+                            new PointF(rnd.Next(0, displayWidth / 2), rnd.Next(0, displayHeight / 2));
+                        movingCar.Destination =
+                            new PointF(rnd.Next(0, displayWidth / 2), rnd.Next(0, displayHeight / 2));
+                        movingCarsType1.Add(movingCar);
+                    }
+                    else
+                    {
+                        // Нижняя правая четверть (displayWidth/2, displayHeight/2) до (displayWidth, displayHeight)
+                        movingCar.CurrentPosition = new PointF(rnd.Next(displayWidth / 2, displayWidth),
+                            rnd.Next(displayHeight / 2, displayHeight));
+                        movingCar.Destination = new PointF(rnd.Next(displayWidth / 2, displayWidth),
+                            rnd.Next(displayHeight / 2, displayHeight));
+                        movingCarsType2.Add(movingCar);
+                    }
+                }
             }
-
-            // Тип 2: объекты движутся в нижнюю правую четверть (w/2, h/2) до (w, h)
-            for (int i = 0; i < countType2; i++)
+            catch (Exception exception)
             {
-                MovingCar car = new MovingCar("Nissan", 130, 900000, CarType.Hatchback, "Type2");
-                car.CurrentPosition = new PointF(rnd.Next(displayWidth / 2, displayWidth),
-                    rnd.Next(displayHeight / 2, displayHeight));
-                car.Destination = new PointF(rnd.Next(displayWidth / 2, displayWidth),
-                    rnd.Next(displayHeight / 2, displayHeight));
-                movingCarsType2.Add(car);
+                Logger.LogException(exception);
+                MessageBox.Show("Ошибка при инициализации объектов движения: " + exception.Message, "Ошибка",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
