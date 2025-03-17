@@ -22,7 +22,6 @@ namespace CarManagementApp
         // Объект синхронизации для паузы/возобновления
         public object PauseLock { get; } = new object();
 
-        //TODO:Многопоточность
         private volatile bool isPaused;
 
         public MovingCar(string brand, int power, decimal cost, CarType carType, string owner = "Не указан")

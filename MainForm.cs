@@ -52,13 +52,11 @@ namespace CarManagementApp
                 fileToolStripMenuItem, helpToolStripMenuItem
             });
 
-            //TODO:Многопоточность lab_2
             this.multiThreadMenuItem = new ToolStripMenuItem();
             this.multiThreadMenuItem.Text = "Многопоточность";
             this.multiThreadMenuItem.Click += new EventHandler(OpenMultiThreadForm);
             this.menuStrip.Items.Add(multiThreadMenuItem);
 
-            //TODO:Многопоточность
             void OpenMultiThreadForm(object sender, EventArgs e)
             {
                 MultiThreadForm multiThreadForm = new MultiThreadForm();
@@ -312,7 +310,6 @@ namespace CarManagementApp
 
         private TextBox ownerNameTextBox;
 
-        //TODO:Многопоточность
         private ToolStripMenuItem multiThreadMenuItem;
     }
 }

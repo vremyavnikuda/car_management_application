@@ -515,8 +515,8 @@ namespace CarManagementApp.Models
         {
             if (other == null)
                 return 0;
-
-            const double R = 6371.0; // Earth's radius in kilometers
+            // Earth's radius in kilometers
+            const double R = 6371.0;
 
             double lat1 = Latitude * Math.PI / 180.0;
             double lon1 = Longitude * Math.PI / 180.0;

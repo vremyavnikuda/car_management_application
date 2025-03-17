@@ -1,5 +1,4 @@
-﻿// TODO: Логирование событий
-namespace CarManagementApp
+﻿namespace CarManagementApp
 {
     public static class Logger
     {
