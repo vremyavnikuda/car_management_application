@@ -1,8 +1,4 @@
-﻿using System;
-using System.IO;
-
-
-// TODO: Логирование событий
+﻿// TODO: Логирование событий
 namespace CarManagementApp
 {
     public static class Logger

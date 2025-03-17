@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace CarManagementApp.Models
@@ -62,15 +59,14 @@ namespace CarManagementApp.Models
                     var options = new JsonSerializerOptions
                     {
                         ReferenceHandler = ReferenceHandler.Preserve,
-                        PropertyNameCaseInsensitive = true // Add this to make property matching case-insensitive
+                        PropertyNameCaseInsensitive = true
                     };
 
                     cars = JsonSerializer.Deserialize<List<Car>>(json, options) ?? new List<Car>();
                 }
                 catch (JsonException ex)
                 {
-                    // Log the error for debugging
-                    Console.WriteLine($"Error deserializing cars: {ex.Message}");
+                    Logger.LogException(ex);
                     // If deserialization fails, create a new empty list
                     cars = new List<Car>();
                 }

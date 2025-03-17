@@ -55,11 +55,11 @@ namespace CarManagementApp
             //TODO:Многопоточность lab_2
             this.multiThreadMenuItem = new ToolStripMenuItem();
             this.multiThreadMenuItem.Text = "Многопоточность";
-            this.multiThreadMenuItem.Click+=new EventHandler(OpenMultiThreadForm);
+            this.multiThreadMenuItem.Click += new EventHandler(OpenMultiThreadForm);
             this.menuStrip.Items.Add(multiThreadMenuItem);
 
             //TODO:Многопоточность
-            void OpenMultiThreadForm(object sender ,EventArgs e)
+            void OpenMultiThreadForm(object sender, EventArgs e)
             {
                 MultiThreadForm multiThreadForm = new MultiThreadForm();
                 multiThreadForm.ShowDialog();
@@ -104,16 +104,18 @@ namespace CarManagementApp
             // Настройка списка автомобилей
             this.carListBox.Location = new Point(10, 70);
             this.carListBox.Size = new Size(300, 450);
+            // Добавлено: растягивается по вертикали
             this.carListBox.Anchor =
-                AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left; // Добавлено: растягивается по вертикали
+                AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
             this.carListBox.SelectedIndexChanged += new EventHandler(CarSelected);
 
             // Настройка панели деталей
             this.detailsPanel.Location = new Point(320, 70);
             this.detailsPanel.Size = new Size(450, 450);
+            // Добавлено: растягивается по вертикали и горизонтали
             this.detailsPanel.Anchor =
                 AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left |
-                AnchorStyles.Right; // Добавлено: растягивается по вертикали и горизонтали
+                AnchorStyles.Right;
             this.detailsPanel.BorderStyle = BorderStyle.FixedSingle;
 
             // Добавление элементов на панель деталей с настройкой Anchor

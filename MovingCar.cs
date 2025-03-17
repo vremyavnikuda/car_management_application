@@ -1,7 +1,4 @@
-﻿using System;
-using System.Drawing;
-using System.Threading;
-using CarManagementApp.Models;
+﻿using CarManagementApp.Models;
 
 namespace CarManagementApp
 {
@@ -58,7 +55,6 @@ namespace CarManagementApp
                         while (isPaused)
                         {
                             // Если поток находится в состоянии паузы, Monitor.Wait заставит его ждать.
-                            // Здесь можно добавить условие паузы, например, через дополнительное поле.
                             Monitor.Wait(PauseLock);
                         }
                     }

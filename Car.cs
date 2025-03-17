@@ -518,7 +518,6 @@ namespace CarManagementApp.Models
 
             const double R = 6371.0; // Earth's radius in kilometers
 
-            // Convert latitude and longitude from degrees to radians
             double lat1 = Latitude * Math.PI / 180.0;
             double lon1 = Longitude * Math.PI / 180.0;
             double lat2 = other.Latitude * Math.PI / 180.0;
