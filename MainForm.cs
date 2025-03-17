@@ -51,7 +51,22 @@ namespace CarManagementApp
             {
                 fileToolStripMenuItem, helpToolStripMenuItem
             });
-            this.menuStrip.Dock = DockStyle.Top; // Добавлено: меню всегда сверху
+
+            //TODO:Многопоточность lab_2
+            this.multiThreadMenuItem = new ToolStripMenuItem();
+            this.multiThreadMenuItem.Text = "Многопоточность";
+            this.multiThreadMenuItem.Click+=new EventHandler(OpenMultiThreadForm);
+            this.menuStrip.Items.Add(multiThreadMenuItem);
+
+            //TODO:Многопоточность
+            void OpenMultiThreadForm(object sender ,EventArgs e)
+            {
+                MultiThreadForm multiThreadForm = new MultiThreadForm();
+                multiThreadForm.ShowDialog();
+            }
+
+            // Добавлено: меню всегда сверху
+            this.menuStrip.Dock = DockStyle.Top;
 
             this.fileToolStripMenuItem.Text = "Файл";
             this.fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
@@ -89,13 +104,16 @@ namespace CarManagementApp
             // Настройка списка автомобилей
             this.carListBox.Location = new Point(10, 70);
             this.carListBox.Size = new Size(300, 450);
-            this.carListBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left; // Добавлено: растягивается по вертикали
+            this.carListBox.Anchor =
+                AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left; // Добавлено: растягивается по вертикали
             this.carListBox.SelectedIndexChanged += new EventHandler(CarSelected);
 
             // Настройка панели деталей
             this.detailsPanel.Location = new Point(320, 70);
             this.detailsPanel.Size = new Size(450, 450);
-            this.detailsPanel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right; // Добавлено: растягивается по вертикали и горизонтали
+            this.detailsPanel.Anchor =
+                AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left |
+                AnchorStyles.Right; // Добавлено: растягивается по вертикали и горизонтали
             this.detailsPanel.BorderStyle = BorderStyle.FixedSingle;
 
             // Добавление элементов на панель деталей с настройкой Anchor
@@ -122,7 +140,8 @@ namespace CarManagementApp
 
             this.repairDatesListBox.Location = new Point(10, 160);
             this.repairDatesListBox.Size = new Size(430, 200);
-            this.repairDatesListBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            this.repairDatesListBox.Anchor =
+                AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
             this.ownerNameLabel.Location = new Point(10, 370);
             this.ownerNameLabel.Size = new Size(430, 20);
@@ -288,6 +307,10 @@ namespace CarManagementApp
         private Label repairDatesLabel;
         private ListBox repairDatesListBox;
         private Label ownerNameLabel;
+
         private TextBox ownerNameTextBox;
+
+        //TODO:Многопоточность
+        private ToolStripMenuItem multiThreadMenuItem;
     }
 }
