@@ -411,14 +411,14 @@ namespace CarManagementApp.Models
             return totalDistance;
         }
 
-        public int CompareTo(Car other)
+        public int CompareTo(Car? other)
         {
             if (other == null) return 1;
 
-            int brandComparison = Brand.CompareTo(other.Brand);
+            int brandComparison = String.Compare(Brand, other.Brand, StringComparison.Ordinal);
             if (brandComparison != 0) return brandComparison;
 
-            int modelComparison = Model.CompareTo(other.Model);
+            int modelComparison = String.Compare(Model, other.Model, StringComparison.Ordinal);
             if (modelComparison != 0) return modelComparison;
 
             return Cost.CompareTo(other.Cost);
@@ -469,8 +469,8 @@ namespace CarManagementApp.Models
 
     public class PhotoInfo
     {
-        public string Path { get; set; }
-        public string Description { get; set; }
+        public string? Path { get; set; }
+        public string? Description { get; set; }
         public DateTime DateAdded { get; set; }
     }
 
@@ -486,7 +486,7 @@ namespace CarManagementApp.Models
     public class ServiceRecord
     {
         public DateTime Date { get; set; }
-        public string Description { get; set; }
+        public string? Description { get; set; }
         public decimal Cost { get; set; }
         public double Odometer { get; set; }
     }
@@ -550,9 +550,9 @@ namespace CarManagementApp.Models
             }
         }
 
-        public class VINFormatException : Exception
+        public class VinFormatException : Exception
         {
-            public VINFormatException(string message) : base(message)
+            public VinFormatException(string message) : base(message)
             {
             }
         }

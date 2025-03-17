@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
@@ -9,20 +8,20 @@ namespace CarManagementApp.Models
 {
     public abstract class Vehicle : INotifyPropertyChanged
     {
-        protected string brand;
-        protected int power;
-        protected decimal cost;
-        protected List<DateTime> repairDates;
-        protected string vin;
-        protected int yearOfManufacture;
-        protected double mileage;
-        protected Color color;
-        protected DateTime registrationDate;
-        protected DateTime lastInspectionDate;
-        protected bool isInsured;
-        protected DateTime insuranceExpiryDate;
+        private string brand;
+        private int power;
+        private decimal cost;
+        private List<DateTime> repairDates;
+        private string vin;
+        private int yearOfManufacture;
+        private double mileage;
+        private Color color;
+        private DateTime registrationDate;
+        private DateTime lastInspectionDate;
+        private bool isInsured;
+        private DateTime insuranceExpiryDate;
 
-        public Vehicle(string brand, int power, decimal cost)
+        protected Vehicle(string brand, int power, decimal cost)
         {
             if (string.IsNullOrWhiteSpace(brand))
                 throw new ArgumentException("Марка не может быть пустой.");
@@ -86,7 +85,7 @@ namespace CarManagementApp.Models
             set
             {
                 if (!string.IsNullOrEmpty(value) && value.Length != 17)
-                    throw new GeoLocation.VINFormatException("VIN должен содержать 17 символов");
+                    throw new GeoLocation.VinFormatException("VIN должен содержать 17 символов");
                 SetProperty(ref vin, value);
             }
         }
@@ -167,14 +166,14 @@ namespace CarManagementApp.Models
         public abstract decimal CalculateInsurancePremium();
 
         #region INotifyPropertyChanged
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged = null!;
 
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string propertyName = null!)
         {
             if (EqualityComparer<T>.Default.Equals(field, value))
                 return false;

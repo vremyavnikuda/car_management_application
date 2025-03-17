@@ -9,21 +9,30 @@ namespace CarManagementApp
     {
         // Положение объекта в области отображения
         public PointF CurrentPosition { get; set; }
+
         // Конечная точка движения
         public PointF Destination { get; set; }
+
         // Скорость перемещения (в пикселях за итерацию)
         public float Speed { get; set; }
+
         // Изображение для отображения объекта (можно загрузить из ресурсов)
         public Image CarImage { get; set; }
+
         // Флаг, контролирующий работу потока
         public bool IsRunning { get; private set; }
+
         // Объект синхронизации для паузы/возобновления
         public object PauseLock { get; } = new object();
+
+        //TODO:Многопоточность
+        private volatile bool isPaused;
 
         public MovingCar(string brand, int power, decimal cost, CarType carType, string owner = "Не указан")
             : base(brand, power, cost, carType, owner)
         {
             Speed = 2f;
+            isPaused = false;
         }
 
         public void StartMoving()
@@ -39,34 +48,45 @@ namespace CarManagementApp
 
         private void Move()
         {
-            while (IsRunning)
+            try
             {
-                // Реализация паузы через Monitor
-                lock (PauseLock)
+                while (IsRunning)
                 {
-                    // Если поток находится в состоянии паузы, Monitor.Wait заставит его ждать.
-                    // Здесь можно добавить условие паузы, например, через дополнительное поле.
-                    Monitor.PulseAll(PauseLock);
-                }
+                    // Реализация паузы через Monitor
+                    lock (PauseLock)
+                    {
+                        while (isPaused)
+                        {
+                            // Если поток находится в состоянии паузы, Monitor.Wait заставит его ждать.
+                            // Здесь можно добавить условие паузы, например, через дополнительное поле.
+                            Monitor.Wait(PauseLock);
+                        }
+                    }
 
-                // Вычисляем вектор движения
-                float dx = Destination.X - CurrentPosition.X;
-                float dy = Destination.Y - CurrentPosition.Y;
-                float distance = (float)Math.Sqrt(dx * dx + dy * dy);
-                if (distance < Speed)
-                {
-                    // Если достигнута конечная точка, генерируем новую случайную конечную точку
-                    Destination = GenerateRandomDestination();
+                    // Вычисляем вектор движения
+                    float dx = Destination.X - CurrentPosition.X;
+                    float dy = Destination.Y - CurrentPosition.Y;
+                    float distance = (float)Math.Sqrt(dx * dx + dy * dy);
+                    if (distance < Speed)
+                    {
+                        // Если достигнута конечная точка, генерируем новую случайную конечную точку
+                        Destination = GenerateRandomDestination();
+                    }
+                    else
+                    {
+                        // Обновляем положение по направлению к Destination
+                        float stepX = Speed * dx / distance;
+                        float stepY = Speed * dy / distance;
+                        CurrentPosition = new PointF(CurrentPosition.X + stepX, CurrentPosition.Y + stepY);
+                    }
+                    // Пауза между итерациями для плавности движения
+                    Thread.Sleep(20);
                 }
-                else
-                {
-                    // Обновляем положение по направлению к Destination
-                    float stepX = Speed * dx / distance;
-                    float stepY = Speed * dy / distance;
-                    CurrentPosition = new PointF(CurrentPosition.X + stepX, CurrentPosition.Y + stepY);
-                }
-
-                Thread.Sleep(20); // Пауза между итерациями для плавности движения
+            }
+            catch (Exception exception)
+            {
+                Logger.LogException(exception);
+                IsRunning = false;
             }
         }
 
@@ -81,18 +101,19 @@ namespace CarManagementApp
             return new PointF(rnd.Next(0, 300), rnd.Next(0, 300));
         }
 
-        public void Pause()
+        public void PauseMoving()
         {
             lock (PauseLock)
             {
-                Monitor.Wait(PauseLock);
+                isPaused = true;
             }
         }
 
-        public void Resume()
+        public void ResumeMoving()
         {
             lock (PauseLock)
             {
+                isPaused = false;
                 Monitor.PulseAll(PauseLock);
             }
         }
@@ -100,6 +121,11 @@ namespace CarManagementApp
         public void StopMoving()
         {
             IsRunning = false;
+            lock (PauseLock)
+            {
+                isPaused = false;
+                Monitor.PulseAll(PauseLock);
+            }
         }
     }
 }
