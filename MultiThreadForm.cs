@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using CarManagementApp.Models;
+using Exception = System.Exception;
 using Timer = System.Windows.Forms.Timer;
 
 namespace CarManagementApp
@@ -62,8 +63,6 @@ namespace CarManagementApp
             refreshTimer.Interval = 100;
             refreshTimer.Tick += new EventHandler(RefreshTimer_Tick);
             displayPanel.Paint += DisplayPanel_Paint;
-            //refreshTimer.Tick += (s, e) => displayPanel.Invalidate();
-            //displayPanel.Paint += DisplayPanel_Paint;
         }
 
         private void RefreshTimer_Tick(object? sender, EventArgs e)
@@ -168,10 +167,10 @@ namespace CarManagementApp
                 statusLabel.Text = "Статус: на паузе";
                 Logger.Log("Все объекты поставлены на паузу.");
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                Logger.LogException(ex);
-                MessageBox.Show("Ошибка при постановке на паузу: " + ex.Message);
+                Logger.LogException(exception);
+                MessageBox.Show("Ошибка при постановке на паузу: " + exception.Message);
             }
         }
 
@@ -186,10 +185,10 @@ namespace CarManagementApp
                 statusLabel!.Text = "Статус: запущено";
                 Logger.Log("Все объекты возобновили движение.");
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                Logger.LogException(ex);
-                MessageBox.Show("Ошибка при возобновлении: " + ex.Message);
+                Logger.LogException(exception);
+                MessageBox.Show("Ошибка при возобновлении: " + exception.Message);
             }
         }
 
@@ -205,10 +204,10 @@ namespace CarManagementApp
                 statusLabel!.Text = "Статус: остановлено";
                 Logger.Log("Все объекты остановлены.");
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                Logger.LogException(ex);
-                MessageBox.Show("Ошибка при остановке: " + ex.Message);
+                Logger.LogException(exception);
+                MessageBox.Show("Ошибка при остановке: " + exception.Message);
             }
         }
 

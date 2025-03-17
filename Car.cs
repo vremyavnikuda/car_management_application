@@ -75,7 +75,7 @@ namespace CarManagementApp.Models
         private string ownerName;
         private string licensePlate;
 
-        // Add parameterless constructor for JSON deserialization
+        // Конструктор без параметров для десириализации JSON
         [JsonConstructor]
         public Car() : base("Неизвестно", 0, 0)
         {
@@ -248,6 +248,8 @@ namespace CarManagementApp.Models
             }
         }
 
+
+        // TODO: мб когда нибудь пригодится
         // public override string GetInfo()
         // {
         //     return

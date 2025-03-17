@@ -67,12 +67,14 @@ namespace CarManagementApp.Models
                 catch (JsonException ex)
                 {
                     Logger.LogException(ex);
-                    // If deserialization fails, create a new empty list
+                    // Если десериализация не удается => создаем новый пустой список
                     cars = new List<Car>();
                 }
             }
         }
 
+        //TODO: Поиск << не хочу пока что делать его
+        // А смысл?????
         public List<Car> SearchCars(string query)
         {
             return cars.FindAll(car =>
