@@ -46,8 +46,8 @@ namespace CarManagementApp
                 { Text = "Статус: не запущено", Location = new Point(20, 260), Size = new Size(220, 40) };
 
             startButton.Click += StartButton_Click;
-            pauseButton.Click += PauseButton_Click!;
-            resumeButton.Click += ResumeButton_Click!;
+            pauseButton.Click += PauseButton_Click;
+            resumeButton.Click += ResumeButton_Click;
             stopButton.Click += StopButton_Click;
 
             controlPanel.Controls.AddRange(new Control[]
