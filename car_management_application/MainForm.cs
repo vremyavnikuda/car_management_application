@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Drawing;
+using System.Net.Sockets;
+using System.Text;
 using System.Windows.Forms;
 using CarManagementApp.Models;
 
@@ -9,6 +11,10 @@ namespace CarManagementApp
     {
         private readonly CarCollection carCollection;
         private readonly string dataFilePath = "cars.json";
+        private TcpClient client;
+        private NetworkStream stream;
+        private List<TcpClient> connectedClients = new List<TcpClient>();
+        private Thread listenerThread;
 
         public MainForm()
         {
