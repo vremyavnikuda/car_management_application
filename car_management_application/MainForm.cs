@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Data;
 using System.Drawing;
 using System.Net.Sockets;
 using System.Text;
 using System.Windows.Forms;
 using CarManagementApp.Models;
+using lab_1;
+using MenuStrip = System.Windows.Forms.MenuStrip;
 
 namespace CarManagementApp
 {
@@ -15,6 +18,7 @@ namespace CarManagementApp
         private NetworkStream stream;
         private List<TcpClient> connectedClients = new List<TcpClient>();
         private Thread listenerThread;
+        private ToolStripMenuItem connectionToolStripMenuItem;
 
         public MainForm()
         {
@@ -47,6 +51,7 @@ namespace CarManagementApp
             this.repairDatesListBox = new ListBox();
             this.ownerNameLabel = new Label();
             this.ownerNameTextBox = new TextBox();
+
 
             // Настройка формы
             this.Text = "Управление автомобилями";
@@ -173,6 +178,17 @@ namespace CarManagementApp
                 menuStrip, toolStrip, carListBox, detailsPanel
             });
             this.MainMenuStrip = this.menuStrip;
+
+            this.connectionToolStripMenuItem = new ToolStripMenuItem();
+            this.connectionToolStripMenuItem.Text = "Подключиться";
+            this.connectionToolStripMenuItem.Click += new EventHandler(OpenConnectionForm);
+            this.fileToolStripMenuItem.DropDownItems.Add(this.connectionToolStripMenuItem);
+        }
+
+        private void OpenConnectionForm(object sender, EventArgs e)
+        {
+            ConnectionForm connectionForm = new ConnectionForm();
+            connectionForm.Show();
         }
 
         private void UpdateCarList()
