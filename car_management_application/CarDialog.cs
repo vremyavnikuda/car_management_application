@@ -327,7 +327,9 @@ namespace CarManagementApp
             {
                 car.Brand = brandTextBox.Text;
                 car.Model = modelTextBox.Text;
-                car.Power = int.Parse(powerTextBox.Text);
+                if (!int.TryParse(powerTextBox.Text, out int power))
+                    throw new ArgumentException("Некорректная мощность");
+                car.Power = power;
                 car.Cost = decimal.Parse(costTextBox.Text);
                 car.CarType = (CarType)Enum.Parse(typeof(CarType), typeComboBox.SelectedItem.ToString());
                 car.FuelType = (FuelType)Enum.Parse(typeof(FuelType), fuelTypeComboBox.SelectedItem.ToString());
@@ -337,9 +339,9 @@ namespace CarManagementApp
                 car.OwnerName = ownerNameTextBox.Text;
                 car.LicensePlate = licensePlateTextBox.Text;
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                MessageBox.Show("Ошибка сохранения данных: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Ошибка сохранения данных: " + exception.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 this.DialogResult = DialogResult.None;
             }
         }

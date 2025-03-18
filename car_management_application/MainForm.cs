@@ -186,7 +186,7 @@ namespace CarManagementApp
 
         private void UpdateConnectionStatus(bool isConnected)
         {
-            connectionStatusIndicator.BackColor = isConnected ? Color.Green : Color.Red;
+            _connectionStatusIndicator.BackColor = isConnected ? Color.Green : Color.Red;
         }
 
         private void UpdateCarList()
@@ -200,11 +200,11 @@ namespace CarManagementApp
 
         private void _ConnectionStatusIndicator()
         {
-            connectionStatusIndicator = new PictureBox();
-            connectionStatusIndicator.Location = new Point(20, 550);
-            connectionStatusIndicator.Size = new Size(10,10);
-            connectionStatusIndicator.BackColor = Color.Red;
-            this.Controls.Add(connectionStatusIndicator);
+            _connectionStatusIndicator = new PictureBox();
+            _connectionStatusIndicator.Location = new Point(20, 550);
+            _connectionStatusIndicator.Size = new Size(10, 10);
+            _connectionStatusIndicator.BackColor = Color.Red;
+            this.Controls.Add(_connectionStatusIndicator);
         }
 
         private void ShowCarDetails(Car car)
@@ -311,7 +311,16 @@ namespace CarManagementApp
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            carCollection.SaveToFile(dataFilePath);
+            try
+            {
+                carCollection.SaveToFile(dataFilePath);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show($"Ошибка сохранения данных: {exception.Message}", "Ошибка");
+                throw;
+            }
+
             base.OnFormClosing(e);
         }
 
@@ -345,6 +354,6 @@ namespace CarManagementApp
         private Thread listenerThread;
         private ToolStripMenuItem connectionToolStripMenuItem;
         //TODO: add indicator connection server
-        private PictureBox connectionStatusIndicator;
+        private PictureBox _connectionStatusIndicator;
     }
 }

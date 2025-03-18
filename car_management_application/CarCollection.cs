@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Collections.ObjectModel;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace CarManagementApp.Models
@@ -29,9 +30,9 @@ namespace CarManagementApp.Models
             return cars[index];
         }
 
-        public List<Car> GetAllCars()
+        public ReadOnlyCollection<Car> GetAllCars()
         {
-            return cars;
+            return cars.AsReadOnly();
         }
 
         public int Count => cars.Count;
