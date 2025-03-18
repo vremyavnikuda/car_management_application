@@ -12,14 +12,6 @@ namespace CarManagementApp
 {
     public partial class MainForm : Form
     {
-        private readonly CarCollection carCollection;
-        private readonly string dataFilePath = "cars.json";
-        private TcpClient client;
-        private NetworkStream stream;
-        private List<TcpClient> connectedClients = new List<TcpClient>();
-        private Thread listenerThread;
-        private ToolStripMenuItem connectionToolStripMenuItem;
-
         public MainForm()
         {
             InitializeComponent();
@@ -27,7 +19,6 @@ namespace CarManagementApp
             carCollection.LoadFromFile(dataFilePath);
             UpdateCarList();
         }
-
         private void InitializeComponent()
         {
             // Создание компонентов
@@ -66,13 +57,7 @@ namespace CarManagementApp
             this.multiThreadMenuItem = new ToolStripMenuItem();
             this.multiThreadMenuItem.Text = "Многопоточность";
             this.multiThreadMenuItem.Click += new EventHandler(OpenMultiThreadForm);
-            this.menuStrip.Items.Add(multiThreadMenuItem);
-
-            void OpenMultiThreadForm(object sender, EventArgs e)
-            {
-                MultiThreadForm multiThreadForm = new MultiThreadForm();
-                multiThreadForm.ShowDialog();
-            }
+            this.menuStrip.Items.Add(this.multiThreadMenuItem);
 
             // Добавлено: меню всегда сверху
             this.menuStrip.Dock = DockStyle.Top;
@@ -183,12 +168,25 @@ namespace CarManagementApp
             this.connectionToolStripMenuItem.Text = "Подключиться";
             this.connectionToolStripMenuItem.Click += new EventHandler(OpenConnectionForm);
             this.fileToolStripMenuItem.DropDownItems.Add(this.connectionToolStripMenuItem);
+            //TODO: connection status indicator
+            _ConnectionStatusIndicator();
+        }
+        void OpenMultiThreadForm(object sender, EventArgs e)
+        {
+            MultiThreadForm multiThreadForm = new MultiThreadForm();
+            multiThreadForm.ShowDialog();
         }
 
         private void OpenConnectionForm(object sender, EventArgs e)
         {
             ConnectionForm connectionForm = new ConnectionForm();
+            connectionForm.OnConnectionStatusChanged += UpdateConnectionStatus;
             connectionForm.Show();
+        }
+
+        private void UpdateConnectionStatus(bool isConnected)
+        {
+            connectionStatusIndicator.BackColor = isConnected ? Color.Green : Color.Red;
         }
 
         private void UpdateCarList()
@@ -198,6 +196,15 @@ namespace CarManagementApp
             {
                 carListBox.Items.Add(car.GetInfo());
             }
+        }
+
+        private void _ConnectionStatusIndicator()
+        {
+            connectionStatusIndicator = new PictureBox();
+            connectionStatusIndicator.Location = new Point(20, 550);
+            connectionStatusIndicator.Size = new Size(10,10);
+            connectionStatusIndicator.BackColor = Color.Red;
+            this.Controls.Add(connectionStatusIndicator);
         }
 
         private void ShowCarDetails(Car car)
@@ -213,7 +220,6 @@ namespace CarManagementApp
             costLabel.Text = $"Стоимость: {car.Cost:C}";
             typeLabel.Text = $"Тип: {car.CarType}";
             ownerNameTextBox.Text = car.OwnerName;
-
             repairDatesListBox.Items.Clear();
             foreach (DateTime date in car.RepairDates)
             {
@@ -329,9 +335,16 @@ namespace CarManagementApp
         private Label repairDatesLabel;
         private ListBox repairDatesListBox;
         private Label ownerNameLabel;
-
         private TextBox ownerNameTextBox;
-
         private ToolStripMenuItem multiThreadMenuItem;
+        private readonly CarCollection carCollection;
+        private readonly string dataFilePath = "cars.json";
+        private TcpClient client;
+        private NetworkStream stream;
+        private List<TcpClient> connectedClients = new List<TcpClient>();
+        private Thread listenerThread;
+        private ToolStripMenuItem connectionToolStripMenuItem;
+        //TODO: add indicator connection server
+        private PictureBox connectionStatusIndicator;
     }
 }

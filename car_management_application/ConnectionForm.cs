@@ -9,6 +9,7 @@ public class ConnectionForm : Form
     private TextBox portTextBox;
     private Button connectButton;
     private TcpClient client;
+    public event Action<bool> OnConnectionStatusChanged;
 
 
     public ConnectionForm()
@@ -86,6 +87,15 @@ public class ConnectionForm : Form
         else
         {
             MessageBox.Show("Invalid port number", "Fatal ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
+        if (client != null && client.Connected)
+        {
+            OnConnectionStatusChanged?.Invoke(true);
+        }
+        else
+        {
+            OnConnectionStatusChanged?.Invoke(false);
         }
     }
 
