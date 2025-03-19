@@ -9,7 +9,7 @@ public class ConnectionForm : Form
     private TextBox portTextBox;
     private Button connectButton;
     private TcpClient client;
-    public event Action<bool> OnConnectionStatusChanged;
+    public event Action<bool,TcpClient> OnConnectionStatusChanged;
 
 
     public ConnectionForm()
@@ -75,18 +75,20 @@ public class ConnectionForm : Form
             {
                 client = new TcpClient(ipAddress, port);
                 MessageBox.Show("Успешно подключен к серверу!", "Выполнено", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                OnConnectionStatusChanged?.Invoke(true);
+                OnConnectionStatusChanged?.Invoke(true,client);
                 Task.Run(() => ListenForMessage());
                 this.BeginInvoke(new Action(() => this.Close()));
             }
             catch (Exception exception)
             {
                 MessageBox.Show($"Fatal connection ERROR: {exception.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                OnConnectionStatusChanged?.Invoke(false,null);
             }
         }
         else
         {
             MessageBox.Show("Invalid port number", "Fatal ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            OnConnectionStatusChanged?.Invoke(false,null);
         }
     }
 
@@ -95,17 +97,23 @@ public class ConnectionForm : Form
     {
         Thread listenerThread = new Thread(() =>
         {
-            while (client.Connected)
+            while (client != null && client.Connected)
             {
-                NetworkStream stream = client.GetStream();
-                byte[] buffer = new byte[1024];
-
-                int byteRead = stream.Read(buffer, 0, buffer.Length);
-
-                if (byteRead > 0)
+                try
                 {
-                    string message = Encoding.UTF8.GetString(buffer, 0, byteRead);
-                    Invoke(new Action(() => MessageBox.Show(message, "Hello random User =<<<<<")));
+                    NetworkStream stream = client.GetStream();
+                    byte[] buffer = new byte[1024];
+                    int byteRead = stream.Read(buffer, 0, buffer.Length);
+
+                    if (byteRead > 0)
+                    {
+                        string message = Encoding.UTF8.GetString(buffer, 0, byteRead);
+                        Invoke(new Action(() => MessageBox.Show(message, "Hello random User =<<<<<")));
+                    }
+                }
+                catch (Exception)
+                {
+                    break;
                 }
             }
         });

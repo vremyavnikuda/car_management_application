@@ -18,7 +18,9 @@ namespace CarManagementApp
             carCollection = new CarCollection();
             carCollection.LoadFromFile(dataFilePath);
             UpdateCarList();
+            UpdateConnectionMenuItem();
         }
+
         private void InitializeComponent()
         {
             // Создание компонентов
@@ -166,11 +168,45 @@ namespace CarManagementApp
 
             this.connectionToolStripMenuItem = new ToolStripMenuItem();
             this.connectionToolStripMenuItem.Text = "Подключиться";
-            this.connectionToolStripMenuItem.Click += new EventHandler(OpenConnectionForm);
+            this.connectionToolStripMenuItem.Click += new EventHandler(ConnectionMenuItem_Click);
             this.fileToolStripMenuItem.DropDownItems.Add(this.connectionToolStripMenuItem);
             //TODO: connection status indicator
             _ConnectionStatusIndicator();
         }
+
+        //TODO: task_1
+        private void ConnectionMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!isConnected)
+            {
+                OpenConnectionForm(sender, e);
+            }
+            else
+            {
+                DisconectedServer();
+            }
+        }
+
+        private void DisconectedServer()
+        {
+            try
+            {
+                if (client != null && client.Connected)
+                {
+                    client.Close();
+                    client.Dispose();
+                    client = null;
+                    isConnected = false;
+                    UpdateConnectionStatus(false,null);
+                    MessageBox.Show("Сервер отключен", "Выполнено", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show($"Fatal connection ERROR: {exception.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         void OpenMultiThreadForm(object sender, EventArgs e)
         {
             MultiThreadForm multiThreadForm = new MultiThreadForm();
@@ -184,9 +220,20 @@ namespace CarManagementApp
             connectionForm.Show();
         }
 
-        private void UpdateConnectionStatus(bool isConnected)
+        private void UpdateConnectionStatus(bool isConnected, TcpClient tcpClient)
         {
+            this.isConnected = isConnected;
+            if (isConnected && tcpClient != null)
+            {
+                this.client = tcpClient;
+            }
             _connectionStatusIndicator.BackColor = isConnected ? Color.Green : Color.Red;
+            UpdateConnectionMenuItem();
+        }
+        
+        private void UpdateConnectionMenuItem()
+        {
+            connectionToolStripMenuItem.Text = isConnected ? "Отключиться" : "Подключиться";
         }
 
         private void UpdateCarList()
@@ -203,7 +250,7 @@ namespace CarManagementApp
             _connectionStatusIndicator = new PictureBox();
             _connectionStatusIndicator.Location = new Point(20, 550);
             _connectionStatusIndicator.Size = new Size(10, 10);
-            _connectionStatusIndicator.BackColor = Color.Red;
+            _connectionStatusIndicator.BackColor = isConnected? Color.Green : Color.Red;
             this.Controls.Add(_connectionStatusIndicator);
         }
 
@@ -355,5 +402,7 @@ namespace CarManagementApp
         private ToolStripMenuItem connectionToolStripMenuItem;
         //TODO: add indicator connection server
         private PictureBox _connectionStatusIndicator;
+        //TODO: task_1
+        private bool isConnected = false;
     }
 }
