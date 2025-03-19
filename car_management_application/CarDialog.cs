@@ -61,18 +61,17 @@ namespace CarManagementApp
             }
 
             // Заполняем элементы формы данными
-            brandTextBox.Text = car.Brand;
-            modelTextBox.Text = car.Model;
-            powerTextBox.Text = car.Power.ToString();
-            costTextBox.Text = car.Cost.ToString();
-            typeComboBox.SelectedItem = car.CarType.ToString();
-            fuelTypeComboBox.SelectedItem = car.FuelType.ToString();
-            doorsTextBox.Text = car.Doors.ToString();
-            seatsTextBox.Text = car.Seats.ToString();
-            transmissionComboBox.SelectedItem = car.Transmission;
-            ownerNameTextBox.Text = car.OwnerName;
-            licensePlateTextBox.Text = car.LicensePlate;
-
+            if (brandTextBox != null) { brandTextBox.Text = car.Brand; }
+            if (modelTextBox != null) { modelTextBox.Text = car.Model; }
+            if (powerTextBox != null) { powerTextBox.Text = car.Power.ToString(); }
+            if (costTextBox != null) { costTextBox.Text = car.Cost.ToString(); }
+            if (typeComboBox != null) { typeComboBox.SelectedItem = car.CarType.ToString(); }
+            if (fuelTypeComboBox != null) { fuelTypeComboBox.SelectedItem = car.FuelType.ToString(); }
+            if (doorsTextBox != null) { doorsTextBox.Text = car.Doors.ToString(); }
+            if (seatsTextBox != null) { seatsTextBox.Text = car.Seats.ToString(); }
+            if (transmissionComboBox != null) { transmissionComboBox.SelectedItem = car.Transmission; }
+            if (ownerNameTextBox != null) { ownerNameTextBox.Text = car.OwnerName; }
+            if (licensePlateTextBox != null) { licensePlateTextBox.Text = car.LicensePlate; }
             UpdateRepairDatesList();
         }
 
@@ -258,7 +257,7 @@ namespace CarManagementApp
             this.CancelButton = cancelButton;
         }
 
-        private void AddRepairDate(object sender, EventArgs e)
+        private void AddRepairDate(object? sender, EventArgs? e)
         {
             using (DateTimePicker dateTimePicker = new DateTimePicker())
             {
@@ -298,7 +297,7 @@ namespace CarManagementApp
             }
         }
 
-        private void RemoveRepairDate(object sender, EventArgs e)
+        private void RemoveRepairDate(object? sender, EventArgs? e)
         {
             if (repairDatesListBox.SelectedIndex >= 0)
             {
@@ -321,7 +320,7 @@ namespace CarManagementApp
             }
         }
 
-        private void SaveCar(object sender, EventArgs e)
+        private void SaveCar(object? sender, EventArgs? e)
         {
             try
             {
@@ -335,7 +334,7 @@ namespace CarManagementApp
                 car.FuelType = (FuelType)Enum.Parse(typeof(FuelType), fuelTypeComboBox.SelectedItem.ToString());
                 car.Doors = int.Parse(doorsTextBox.Text);
                 car.Seats = int.Parse(seatsTextBox.Text);
-                car.Transmission = transmissionComboBox.SelectedItem.ToString();
+                car.Transmission = transmissionComboBox.SelectedItem?.ToString() ?? string.Empty;
                 car.OwnerName = ownerNameTextBox.Text;
                 car.LicensePlate = licensePlateTextBox.Text;
             }

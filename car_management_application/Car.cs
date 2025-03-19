@@ -541,6 +541,7 @@ namespace CarManagementApp.Models
         {
             public PowerNegativeException(string message) : base(message)
             {
+                // KRUTO: тут должна была быть какая то крутая реализация кода
             }
         }
 
@@ -548,6 +549,7 @@ namespace CarManagementApp.Models
         {
             public CostNegativeException(string message) : base(message)
             {
+                // KRUTO: тут должна была быть какая то крутая реализация кода
             }
         }
 
@@ -555,6 +557,7 @@ namespace CarManagementApp.Models
         {
             public VinFormatException(string message) : base(message)
             {
+                // KRUTO: тут должна была быть какая то крутая реализация кода
             }
         }
     }
