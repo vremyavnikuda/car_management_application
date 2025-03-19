@@ -64,7 +64,7 @@ public class ConnectionForm : Form
         this.Controls.Add(connectButton);
     }
 
-    private void ConnectButton_Click(object serder, EventArgs e)
+    private void ConnectButton_Click(object sender, EventArgs e)
     {
         string ipAddress = ipTextBox.Text;
         int port;
@@ -74,30 +74,22 @@ public class ConnectionForm : Form
             try
             {
                 client = new TcpClient(ipAddress, port);
-                MessageBox.Show("Connected to server done!!!", "Success", MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
-                ListenForMessage();
+                MessageBox.Show("Успешно подключен к серверу!", "Выполнено", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                OnConnectionStatusChanged?.Invoke(true);
+                Task.Run(() => ListenForMessage());
+                this.BeginInvoke(new Action(() => this.Close()));
             }
             catch (Exception exception)
             {
-                MessageBox.Show($"Fatal connection ERROR: {exception.Message}", "Error", MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                MessageBox.Show($"Fatal connection ERROR: {exception.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         else
         {
             MessageBox.Show("Invalid port number", "Fatal ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
-
-        if (client != null && client.Connected)
-        {
-            OnConnectionStatusChanged?.Invoke(true);
-        }
-        else
-        {
-            OnConnectionStatusChanged?.Invoke(false);
-        }
     }
+
 
     private void ListenForMessage()
     {
