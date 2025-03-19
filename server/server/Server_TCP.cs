@@ -11,6 +11,7 @@ namespace TcpServer
     {
         private static List<TcpClient> clients = new List<TcpClient>();
         private static TcpListener server;
+        private static readonly string dataFilePath = "server_cars.json";
 
         static void Main(string[] args)
         {
@@ -39,7 +40,7 @@ namespace TcpServer
         private static void HandleClient(TcpClient client)
         {
             NetworkStream stream = client.GetStream();
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[65536];
             string welcomeMessage = "Welcome to the server!\n";
             byte[] message = Encoding.UTF8.GetBytes(welcomeMessage);
             stream.Write(message, 0, message.Length);
@@ -56,6 +57,28 @@ namespace TcpServer
 
                     string messageReceived = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                     Console.WriteLine($"Get message from client: {client.Client.RemoteEndPoint}: {messageReceived}");
+                    if (messageReceived.StartsWith("SEND_DATA:"))
+                    {
+                        string jsonData = messageReceived.Substring("SEND_DATA:".Length);
+                        File.WriteAllText(dataFilePath, jsonData);
+                        Console.WriteLine("Data saved to " + dataFilePath);
+                    }
+                    else if (messageReceived == "REQUEST_DATA")
+                    {
+                        if (File.Exists(dataFilePath))
+                        {
+                            string jsonData = File.ReadAllText(dataFilePath);
+                            byte[] response = Encoding.UTF8.GetBytes($"DATA: {jsonData}");
+                            stream.Write(response, 0, response.Length);
+                            Console.WriteLine("Data sent to " + client.Client.RemoteEndPoint);
+                        }
+                        else
+                        {
+                            byte[] response = Encoding.UTF8.GetBytes("DATA:[]");
+                            stream.Write(response, 0, response.Length);
+                            Console.WriteLine("No data found,send empty list");
+                        }
+                    }
                 }
                 catch (Exception exception)
                 {
@@ -82,8 +105,15 @@ namespace TcpServer
             byte[] message = Encoding.UTF8.GetBytes(clientList);
             foreach (var client in clients)
             {
-                NetworkStream stream = client.GetStream();
-                stream.Write(message, 0, message.Length);
+                try
+                {
+                    NetworkStream stream = client.GetStream();
+                    stream.Write(message, 0, message.Length);
+                }
+                catch (Exception exception)
+                {
+                    Console.WriteLine("Error occurred: " + exception.Message);
+                }
             }
         }
     }

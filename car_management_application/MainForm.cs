@@ -67,7 +67,8 @@ namespace CarManagementApp
             this.fileToolStripMenuItem.Text = "Файл";
             this.fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
             {
-                addToolStripMenuItem, editToolStripMenuItem, deleteToolStripMenuItem
+                addToolStripMenuItem, editToolStripMenuItem, deleteToolStripMenuItem,dataToolStripMenuItem = new
+                    ToolStripMenuItem("Данные",null,OpenDataForm)
             });
 
             this.addToolStripMenuItem.Text = "Добавить";
@@ -170,8 +171,21 @@ namespace CarManagementApp
             this.connectionToolStripMenuItem.Text = "Подключиться";
             this.connectionToolStripMenuItem.Click += new EventHandler(ConnectionMenuItem_Click);
             this.fileToolStripMenuItem.DropDownItems.Add(this.connectionToolStripMenuItem);
+
             //TODO: connection status indicator
             _ConnectionStatusIndicator();
+        }
+
+        private void OpenDataForm(object sender,EventArgs eventArgs)
+        {
+            if (!isConnected || client == null || !client.Connected)
+            {
+                MessageBox.Show("Сначала подключитесь к серверу", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            DataForm dataform = new DataForm(carCollection, client);
+            dataform.ShowDialog();
         }
 
         //TODO: task_1
@@ -404,5 +418,6 @@ namespace CarManagementApp
         private PictureBox _connectionStatusIndicator;
         //TODO: task_1
         private bool isConnected = false;
+        private ToolStripMenuItem dataToolStripMenuItem;
     }
 }

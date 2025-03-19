@@ -30,9 +30,9 @@ namespace CarManagementApp.Models
             return cars[index];
         }
 
-        public ReadOnlyCollection<Car> GetAllCars()
+        public List<Car> GetAllCars()
         {
-            return cars.AsReadOnly();
+            return cars;
         }
 
         public int Count => cars.Count;

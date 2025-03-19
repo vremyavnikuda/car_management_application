@@ -219,7 +219,7 @@ namespace CarManagementApp.Models
             get
             {
                 List<DateTime> dates = new List<DateTime>();
-                foreach (var service in serviceHistory)
+            foreach (var service in serviceHistory)
                 {
                     dates.Add(service.Date);
                 }
