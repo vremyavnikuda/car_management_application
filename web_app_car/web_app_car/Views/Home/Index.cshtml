@@ -1,0 +1,39 @@
+﻿@model IEnumerable<web_app_car.Models.Car>
+
+<h2>Список автомобилей</h2>
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>Марка</th>
+        <th>Модель</th>
+        <th>Год выпуска</th>
+        <th>Тип топлива</th>
+        <th>Цена</th>
+        <th>Действия</th>
+    </tr>
+    </thead>
+    <tbody>
+    @if (Model != null && Model.Any())
+    {
+        @foreach (var car in Model)
+        {
+            <tr>
+                <td>@car.Brand</td>
+                <td>@car.Model</td>
+                <td>@car.YearOfManufacture</td>
+                <td>@car.FuelType</td>
+                <td>@car.Price</td>
+                <td>
+                    <a href="@Url.Action("Edit", "Cars", new { id = car.Id })" class="btn btn-warning">Редактировать</a>
+                    <a href="@Url.Action("Delete", "Cars", new { id = car.Id })" class="btn btn-danger">Удалить</a>
+                </td>
+            </tr>
+        }
+    }
+    else
+    {
+        <tr><td colspan="6">Нет доступных автомобилей</td></tr>
+    }
+    </tbody>
+</table>
