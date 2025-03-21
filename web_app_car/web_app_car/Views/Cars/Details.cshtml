@@ -1,0 +1,63 @@
+﻿@model web_app_car.Models.Cars
+
+@{
+    ViewData["Title"] = "Информация об автомобиле";
+}
+
+<h2>Информация об автомобиле</h2>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h4>@Model.Brand @Model.Model (@Model.YearOfManufacture)</h4>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-3 fw-bold">ФИО Владельца:</div>
+            <div class="col-md-9">@Model.OwnerName</div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-3 fw-bold">Номерной знак:</div>
+            <div class="col-md-9">@Model.LicensePlate</div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-3 fw-bold">Марка:</div>
+            <div class="col-md-9">@Model.Brand</div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-3 fw-bold">Модель:</div>
+            <div class="col-md-9">@Model.Model</div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-3 fw-bold">Год выпуска:</div>
+            <div class="col-md-9">@Model.YearOfManufacture</div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-3 fw-bold">Мощность (л.с):</div>
+            <div class="col-md-9">@Model.Power</div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-3 fw-bold">Тип топлива:</div>
+            <div class="col-md-9">@Model.FuelType</div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-3 fw-bold">Тип:</div>
+            <div class="col-md-9">@Model.Type</div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-3 fw-bold">Коробка:</div>
+            <div class="col-md-9">@Model.Transmission</div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-3 fw-bold">Цена:</div>
+            <div class="col-md-9">@Model.Price.ToString("C")</div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-3 fw-bold">Даты ремонта:</div>
+            <div class="col-md-9">@Model.RepairDates</div>
+        </div>
+    </div>
+    <div class="card-footer">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Редактировать</a>
+        <a asp-action="Index" class="btn btn-secondary">Назад к списку</a>
+    </div>
+</div>

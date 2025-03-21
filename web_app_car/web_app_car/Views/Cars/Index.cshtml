@@ -1,0 +1,56 @@
+﻿@model IEnumerable<web_app_car.Models.Cars>
+@{
+    ViewData["Title"] = "Список автомобилей";
+}
+
+<!-- Центрируем заголовок -->
+<h2 class="text-center">Список автомобилей</h2>
+
+<!-- Контейнер для кнопки "Добавить новый автомобиль" и формы поиска, расположим их на одной линии -->
+<div class="d-flex justify-content-between mb-3">
+    <!-- Кнопка "Добавить новый автомобиль" слева -->
+    <a asp-action="Create" class="btn btn-primary">Добавить новый автомобиль</a>
+
+    <!-- Форма поиска, расположена справа -->
+    <form asp-action="Index" method="get" class="form-inline">
+        <div class="input-group">
+            <input type="text" name="searchQuery" class="form-control" placeholder="Поиск..."
+                   value="@ViewBag.CurrentFilter"/>
+            <button type="submit" class="btn btn-outline-secondary">Поиск</button>
+        </div>
+    </form>
+</div>
+
+<div class="row">
+    @if (Model != null && Model.Any())
+    {
+        @foreach (var car in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">@car.Brand @car.Model (@car.YearOfManufacture)</h4>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Марка:</strong> @car.Brand</p>
+                        <p><strong>Модель:</strong> @car.Model</p>
+                        <p><strong>Год выпуска:</strong> @car.YearOfManufacture</p>
+                        <p><strong>Тип топлива:</strong> @car.FuelType</p>
+                        <p><strong>Цена:</strong> @car.Price.ToString("C")</p>
+                    </div>
+                    <div class="card-footer">
+                        <a asp-action="Details" asp-route-id="@car.Id" class="btn btn-info btn-sm">Просмотр</a>
+                        <a asp-action="Edit" asp-route-id="@car.Id" class="btn btn-warning btn-sm">Редактировать</a>
+                        <a asp-action="Delete" asp-route-id="@car.Id" class="btn btn-danger btn-sm">Удалить</a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12">
+            <p>Нет доступных автомобилей.</p>
+        </div>
+    }
+</div>

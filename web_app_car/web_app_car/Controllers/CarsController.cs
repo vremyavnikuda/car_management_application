@@ -26,13 +26,19 @@ public class CarsController : Controller
     {
         if (ModelState.IsValid)
         {
-            var car = new Car
+            var car = new Cars
             {
                 Brand = carViewModel.Brand,
                 Model = carViewModel.Model,
                 YearOfManufacture = carViewModel.YearOfManufacture,
                 FuelType = carViewModel.FuelType,
-                Price = carViewModel.Price
+                Price = carViewModel.Price,
+                OwnerName = carViewModel.OwnerName,
+                LicensePlate = carViewModel.LicensePlate,
+                Power = carViewModel.Power,
+                Type = carViewModel.Type,
+                Transmission = carViewModel.Transmission,
+                RepairDates = carViewModel.RepairDates
             };
 
             _context.Cars.Add(car);
@@ -43,6 +49,7 @@ public class CarsController : Controller
         return View(carViewModel);
     }
 
+    // GET: Cars/Edit/5
     public async Task<IActionResult> Edit(int? id)
     {
         if (id == null)
@@ -59,9 +66,10 @@ public class CarsController : Controller
         return View(car);
     }
 
+    // POST: Cars/Edit/5
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, Car car)
+    public async Task<IActionResult> Edit(int id, Cars car)
     {
         if (id != car.Id)
         {
@@ -93,7 +101,8 @@ public class CarsController : Controller
         return View(car);
     }
 
-    async Task<IActionResult> Delete(int? id)
+    // GET: Cars/Delete/5
+    public async Task<IActionResult> Delete(int? id)
     {
         if (id == null)
         {
@@ -110,6 +119,7 @@ public class CarsController : Controller
         return View(car);
     }
 
+    // POST: Cars/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
@@ -125,19 +135,17 @@ public class CarsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    // GET: Cars/Index
     public async Task<IActionResult> Index(string searchQuery)
     {
-        var cars = from c in _context.Cars
-            select c;
+        var cars = _context.Cars.AsQueryable();
 
-        if (!String.IsNullOrEmpty(searchQuery))
+        if (!string.IsNullOrEmpty(searchQuery))
         {
             cars = cars.Where(c => c.Brand.Contains(searchQuery) || c.Model.Contains(searchQuery));
         }
 
         var carList = await cars.ToListAsync();
-
-        Console.WriteLine("Cars count: " + carList.Count);
 
         return View(carList);
     }
@@ -145,5 +153,23 @@ public class CarsController : Controller
     private bool CarExists(int id)
     {
         return _context.Cars.Any(e => e.Id == id);
+    }
+
+    // GET: Cars/Details/5
+    public async Task<IActionResult> Details(int? id)
+    {
+        if (id == null)
+        {
+            return NotFound();
+        }
+
+        var car = await _context.Cars
+            .FirstOrDefaultAsync(m => m.Id == id);
+        if (car == null)
+        {
+            return NotFound();
+        }
+
+        return View(car);
     }
 }

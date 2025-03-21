@@ -2,7 +2,7 @@
 
 namespace web_app_car.Models;
 
-public class Car
+public class Cars
 {
     public int Id { get; set; }
 
@@ -19,4 +19,19 @@ public class Car
 
     [Range(0, double.MaxValue)]
     public double Price { get; set; }
+
+    [Required]
+    public string OwnerName { get; set; }
+
+    [Required]
+    public string LicensePlate { get; set; }
+
+    [Range(0, int.MaxValue)]
+    public int Power { get; set; }
+
+    public string Type { get; set; }
+
+    public string Transmission { get; set; }
+
+    public string RepairDates { get; set; }
 }
