@@ -1,39 +1,35 @@
-﻿@model IEnumerable<web_app_car.Models.Car>
+﻿@{
+    ViewData["Title"] = "Главная страница";
+}
 
-<h2>Список автомобилей</h2>
-
-<table class="table">
-    <thead>
-    <tr>
-        <th>Марка</th>
-        <th>Модель</th>
-        <th>Год выпуска</th>
-        <th>Тип топлива</th>
-        <th>Цена</th>
-        <th>Действия</th>
-    </tr>
-    </thead>
-    <tbody>
-    @if (Model != null && Model.Any())
-    {
-        @foreach (var car in Model)
-        {
-            <tr>
-                <td>@car.Brand</td>
-                <td>@car.Model</td>
-                <td>@car.YearOfManufacture</td>
-                <td>@car.FuelType</td>
-                <td>@car.Price</td>
-                <td>
-                    <a href="@Url.Action("Edit", "Cars", new { id = car.Id })" class="btn btn-warning">Редактировать</a>
-                    <a href="@Url.Action("Delete", "Cars", new { id = car.Id })" class="btn btn-danger">Удалить</a>
-                </td>
-            </tr>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f8f9fa;
         }
-    }
-    else
-    {
-        <tr><td colspan="6">Нет доступных автомобилей</td></tr>
-    }
-    </tbody>
-</table>
+        .container {
+            text-align: center;
+        }
+        .btn-primary {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Web сервис по учету автомобилей</h1>
+    <a href="@Url.Action("Index", "Cars")" class="btn btn-primary btn-lg">Start</a>
+</div>
+</body>
+</html>
