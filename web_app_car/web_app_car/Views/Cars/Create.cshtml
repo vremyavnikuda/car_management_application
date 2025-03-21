@@ -37,8 +37,8 @@
 
             <div class="form-group mb-3">
                 <label asp-for="YearOfManufacture" class="control-label">Год выпуска</label>
-                <!-- Используем тип "date" для календаря -->
-                <input asp-for="YearOfManufacture" class="form-control" type="date" />
+                <!-- Сменили тип поля на текстовое поле для ввода года вручную -->
+                <input asp-for="YearOfManufacture" class="form-control" type="text" placeholder="Введите год выпуска" />
                 <span asp-validation-for="YearOfManufacture" class="text-danger"></span>
             </div>
 
