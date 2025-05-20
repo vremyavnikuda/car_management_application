@@ -5,6 +5,10 @@ using document_management.Data;
 using document_management.Models;
 using System.Security.Claims;
 using document_management.Models.ViewModels;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
+using System.Text;
+using System.Web;
 
 namespace document_management.Controllers
 {
@@ -185,6 +189,12 @@ namespace document_management.Controllers
                 var memory = await System.IO.File.ReadAllBytesAsync(document.FilePath);
                 _logger.LogInformation("Document {DocumentId} successfully downloaded ({FileSize} bytes)", 
                     document.Id, memory.Length);
+
+                // Добавляем заголовки для поддержки Office Online Viewer
+                Response.Headers.Add("Access-Control-Allow-Origin", "*");
+                Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
+                Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+
                 return File(memory, document.ContentType ?? "application/octet-stream", Path.GetFileName(document.FilePath));
             }
             catch (Exception ex)
@@ -212,11 +222,71 @@ namespace document_management.Controllers
                 var memory = await System.IO.File.ReadAllBytesAsync(version.FilePath);
                 _logger.LogInformation("Version {VersionId} successfully downloaded ({FileSize} bytes)", 
                     version.Id, memory.Length);
+
+                // Добавляем заголовки для поддержки Office Online Viewer
+                Response.Headers.Add("Access-Control-Allow-Origin", "*");
+                Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
+                Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+
                 return File(memory, "application/octet-stream", Path.GetFileName(version.FilePath));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error downloading version {VersionId}", version.Id);
+                throw;
+            }
+        }
+
+        private string ConvertDocxToHtml(string filePath)
+        {
+            try
+            {
+                using (WordprocessingDocument doc = WordprocessingDocument.Open(filePath, false))
+                {
+                    var body = doc.MainDocumentPart?.Document.Body;
+                    if (body == null) return string.Empty;
+
+                    var html = new StringBuilder();
+                    html.AppendLine("<!DOCTYPE html>");
+                    html.AppendLine("<html>");
+                    html.AppendLine("<head>");
+                    html.AppendLine("<meta charset='utf-8'>");
+                    html.AppendLine("<style>");
+                    html.AppendLine("body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }");
+                    html.AppendLine("p { margin-bottom: 1em; }");
+                    html.AppendLine("h1, h2, h3, h4, h5, h6 { margin-top: 1.5em; margin-bottom: 0.5em; }");
+                    html.AppendLine("</style>");
+                    html.AppendLine("</head>");
+                    html.AppendLine("<body>");
+
+                    foreach (var element in body.Elements())
+                    {
+                        if (element is Paragraph paragraph)
+                        {
+                            var paragraphText = new StringBuilder();
+                            foreach (var run in paragraph.Elements<Run>())
+                            {
+                                var text = run.GetFirstChild<Text>();
+                                if (text != null)
+                                {
+                                    paragraphText.Append(text.Text);
+                                }
+                            }
+                            if (paragraphText.Length > 0)
+                            {
+                                html.AppendLine($"<p>{HttpUtility.HtmlEncode(paragraphText.ToString())}</p>");
+                            }
+                        }
+                    }
+
+                    html.AppendLine("</body>");
+                    html.AppendLine("</html>");
+                    return html.ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error converting DOCX to HTML for file {FilePath}", filePath);
                 throw;
             }
         }
@@ -231,22 +301,61 @@ namespace document_management.Controllers
                 return NotFound();
             }
 
-            if (!document.DocumentType.Equals("PDF", StringComparison.OrdinalIgnoreCase))
-            {
-                _logger.LogWarning("Attempt to preview non-PDF document {DocumentId} by user {User}", 
-                    id, User.Identity?.Name);
-                return BadRequest("Preview is only available for PDF documents");
-            }
-
             _logger.LogInformation("User {User} previewing document {DocumentId} ({Title})", 
                 User.Identity?.Name, document.Id, document.Title);
 
             try
             {
-                var memory = await System.IO.File.ReadAllBytesAsync(document.FilePath);
-                _logger.LogInformation("Document {DocumentId} successfully loaded for preview ({FileSize} bytes)", 
-                    document.Id, memory.Length);
-                return File(memory, "application/pdf");
+                switch (document.DocumentType.ToLower())
+                {
+                    case "pdf":
+                        var pdfMemory = await System.IO.File.ReadAllBytesAsync(document.FilePath);
+                        _logger.LogInformation("Document {DocumentId} successfully loaded for PDF preview ({FileSize} bytes)", 
+                            document.Id, pdfMemory.Length);
+                        return File(pdfMemory, "application/pdf");
+
+                    case "docx":
+                        // Генерируем публичный URL для документа
+                        var fileUrl = Url.Action("Download", "Documents", new { id = document.Id }, Request.Scheme);
+                        
+                        // Формируем URL для Office Online Viewer
+                        var officeViewerUrl = $"https://view.officeapps.live.com/op/embed.aspx?src={Uri.EscapeDataString(fileUrl)}";
+                        
+                        _logger.LogInformation("Document {DocumentId} redirected to Office Online Viewer", document.Id);
+                        
+                        // Создаем HTML страницу с iframe для Office Online Viewer
+                        var html = $@"
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <meta charset='utf-8'>
+                                <title>{HttpUtility.HtmlEncode(document.Title)}</title>
+                                <style>
+                                    body, html {{
+                                        margin: 0;
+                                        padding: 0;
+                                        height: 100%;
+                                        overflow: hidden;
+                                    }}
+                                    iframe {{
+                                        width: 100%;
+                                        height: 100%;
+                                        border: none;
+                                    }}
+                                </style>
+                            </head>
+                            <body>
+                                <iframe src='{officeViewerUrl}' frameborder='0' allowfullscreen='true'></iframe>
+                            </body>
+                            </html>";
+
+                        return Content(html, "text/html");
+
+                    default:
+                        _logger.LogWarning("Attempt to preview unsupported document type {DocumentType} for document {DocumentId} by user {User}", 
+                            document.DocumentType, id, User.Identity?.Name);
+                        return BadRequest($"Preview is not available for {document.DocumentType} documents");
+                }
             }
             catch (Exception ex)
             {

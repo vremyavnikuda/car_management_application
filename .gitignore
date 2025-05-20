@@ -756,3 +756,5 @@ bin/Debug/net9.0-windows/lab_1.dll
 *.pdb
 cars.json
 document_management/appsettings.json
+document_management/wwwroot/uploads/e58586cb-57aa-4626-8271-8e88fd2688ae_Manning.Code.Like.a.Pro.in.Rust.pdf
+document_management/wwwroot/uploads/3aed0493-7632-4a8a-83a0-701da9408c47_History of the Internet.docx
