@@ -755,3 +755,4 @@ bin/Debug/net9.0-windows/lab_1.dll
 *.exe
 *.pdb
 cars.json
+document_management/appsettings.json
