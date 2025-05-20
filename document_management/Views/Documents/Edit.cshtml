@@ -1,0 +1,121 @@
+@model Document
+
+@{
+    ViewData["Title"] = "Edit Document";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title mb-4">Edit Document</h3>
+
+                <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="FilePath" />
+                    <input type="hidden" asp-for="ContentType" />
+                    <input type="hidden" asp-for="CreatedAt" />
+
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label">Title</label>
+                        <input asp-for="Title" class="form-control" required />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="DocumentType" class="form-label">Document Type</label>
+                        <select asp-for="DocumentType" class="form-select" required>
+                            <option value="PDF">PDF</option>
+                            <option value="DOCX">DOCX</option>
+                            <option value="TXT">TXT</option>
+                        </select>
+                        <span asp-validation-for="DocumentType" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Status" class="form-label">Status</label>
+                        <select asp-for="Status" class="form-select" required>
+                            <option value="Draft">Draft</option>
+                            <option value="Under Review">Under Review</option>
+                            <option value="Approved">Approved</option>
+                        </select>
+                        <span asp-validation-for="Status" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Current File</label>
+                        <div class="d-flex align-items-center p-3 bg-light rounded">
+                            <i class="bi bi-file-earmark-text text-primary me-3 h4 mb-0"></i>
+                            <div>
+                                <h6 class="mb-0">@System.IO.Path.GetFileName(Model.FilePath)</h6>
+                                <small class="text-muted">@Model.ContentType</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Upload New Version</label>
+                        <div class="upload-zone" id="dropZone">
+                            <i class="bi bi-cloud-upload display-4 mb-3"></i>
+                            <p class="mb-0">Drag and drop your file here or click to browse</p>
+                            <input type="file" name="file" class="d-none" id="fileInput">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Change Description</label>
+                        <textarea name="changeDescription" class="form-control" rows="3"
+                            placeholder="Describe the changes made in this version"></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Back to Details
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-1"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Initialize drag and drop
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#0d6efd';
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = '#dee2e6';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#dee2e6';
+
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                // Update UI to show selected file
+                const fileName = e.dataTransfer.files[0].name;
+                dropZone.querySelector('p').textContent = `Selected: ${fileName}`;
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                const fileName = e.target.files[0].name;
+                dropZone.querySelector('p').textContent = `Selected: ${fileName}`;
+            }
+        });
+    </script>
+}

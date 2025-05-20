@@ -1,0 +1,198 @@
+@model document_management.Models.ViewModels.DocumentUploadViewModel
+
+@{
+    ViewData["Title"] = "Загрузка документа";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title mb-4">@ViewData["Title"]</h3>
+
+                <form asp-action="Create" method="post" enctype="multipart/form-data" id="uploadForm">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="mb-4">
+                        <label asp-for="Title" class="form-label"></label>
+                        <input asp-for="Title" class="form-control" placeholder="Введите название документа" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="DocumentType" class="form-label"></label>
+                            <select asp-for="DocumentType" class="form-select">
+                                <option value="">Выберите тип документа</option>
+                                <option value="PDF">PDF</option>
+                                <option value="DOCX">DOCX</option>
+                                <option value="TXT">TXT</option>
+                            </select>
+                            <span asp-validation-for="DocumentType" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Status" class="form-label"></label>
+                            <select asp-for="Status" class="form-select">
+                                <option value="">Выберите статус</option>
+                                <option value="Draft">Черновик</option>
+                                <option value="Under Review">На рассмотрении</option>
+                                <option value="Approved">Утвержден</option>
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="File" class="form-label"></label>
+                        <div class="upload-zone" id="dropZone">
+                            <i class="bi bi-cloud-upload display-4 mb-3"></i>
+                            <p class="mb-0" id="dropZoneText">Перетащите файл сюда или нажмите для выбора</p>
+                            <input asp-for="File" type="file" class="d-none" id="fileInput" />
+                            <div id="fileInfo" class="mt-2 d-none">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-file-earmark-text text-primary me-2"></i>
+                                    <div>
+                                        <p class="mb-0" id="fileName"></p>
+                                        <small class="text-muted" id="fileSize"></small>
+                                    </div>
+                                    <button type="button" class="btn btn-link text-danger ms-auto" id="removeFile">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <span asp-validation-for="File" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="ChangeDescription" class="form-label"></label>
+                        <textarea asp-for="ChangeDescription" class="form-control" rows="3"
+                            placeholder="Опишите изменения в документе (необязательно)"></textarea>
+                        <span asp-validation-for="ChangeDescription" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a asp-controller="Documents" asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Назад к списку
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-cloud-upload me-1"></i>Загрузить документ
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .upload-zone {
+            border: 2px dashed #dee2e6;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-zone:hover {
+            border-color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+
+        .upload-zone.dragover {
+            border-color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+
+        #fileInfo {
+            background-color: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+        }
+    </style>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const dropZoneText = document.getElementById('dropZoneText');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const removeFile = document.getElementById('removeFile');
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function updateFileInfo(file) {
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.classList.remove('d-none');
+            dropZoneText.classList.add('d-none');
+        }
+
+        function clearFileInfo() {
+            fileInput.value = '';
+            fileInfo.classList.add('d-none');
+            dropZoneText.classList.remove('d-none');
+        }
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                updateFileInfo(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                updateFileInfo(e.target.files[0]);
+            }
+        });
+
+        removeFile.addEventListener('click', (e) => {
+            e.preventDefault();
+            clearFileInfo();
+        });
+
+        // Валидация формы
+        const form = document.getElementById('uploadForm');
+        form.addEventListener('submit', (e) => {
+            if (!fileInput.files.length) {
+                e.preventDefault();
+                alert('Пожалуйста, выберите файл для загрузки');
+            }
+        });
+    </script>
+}

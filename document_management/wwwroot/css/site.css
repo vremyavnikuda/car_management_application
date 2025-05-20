@@ -1,0 +1,126 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+  background-color: #f8f9fa;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+  color: var(--bs-secondary-color);
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}
+
+/* Custom styles */
+.document-card {
+  transition: transform 0.2s;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.document-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.document-icon {
+  font-size: 2rem;
+  color: #0d6efd;
+}
+
+.version-timeline {
+  position: relative;
+  padding-left: 30px;
+}
+
+.version-timeline::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #dee2e6;
+}
+
+.version-item {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.version-item::before {
+  content: '';
+  position: absolute;
+  left: -30px;
+  top: 5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #0d6efd;
+  border: 2px solid #fff;
+}
+
+.search-box {
+  border-radius: 20px;
+  padding-left: 2.5rem;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+}
+
+.filter-section {
+  background: white;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.status-badge {
+  border-radius: 20px;
+  padding: 0.35rem 0.75rem;
+}
+
+.upload-zone {
+  border: 2px dashed #dee2e6;
+  border-radius: 10px;
+  padding: 2rem;
+  text-align: center;
+  background: white;
+  transition: border-color 0.2s;
+  cursor: pointer;
+}
+
+.upload-zone:hover {
+  border-color: #0d6efd;
+}
+
+.loading-spinner {
+  width: 3rem;
+  height: 3rem;
+}

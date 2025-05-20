@@ -1,0 +1,171 @@
+@model document_management.Models.ViewModels.DocumentsListViewModel
+
+@{
+    ViewData["Title"] = "Documents";
+}
+
+<div class="row">
+    <!-- Sidebar with filters -->
+    <div class="col-md-3">
+        <div class="filter-section">
+            <h5 class="mb-3">Filters</h5>
+
+            <div class="mb-3">
+                <label class="form-label">Document Type</label>
+                <select class="form-select" id="typeFilter">
+                    <option value="">All Types</option>
+                    <option value="PDF">PDF</option>
+                    <option value="DOCX">DOCX</option>
+                    <option value="TXT">TXT</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="statusFilter">
+                    <option value="">All Statuses</option>
+                    <option value="Draft">Draft</option>
+                    <option value="Under Review">Under Review</option>
+                    <option value="Approved">Approved</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Date Range</label>
+                <input type="date" class="form-control mb-2" id="dateFrom">
+                <input type="date" class="form-control" id="dateTo">
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="col-md-9">
+        <!-- Search and actions bar -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="position-relative flex-grow-1 me-3">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" class="form-control search-box" placeholder="Поиск документов...">
+            </div>
+            <a asp-controller="DocumentUpload" asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>@(Model.HasDocuments ? "Добавить новый документ" : "Добавить первый документ")
+            </a>
+        </div>
+
+        <!-- Document cards -->
+        <div class="row g-4">
+            @if (!Model.HasDocuments)
+            {
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="bi bi-file-earmark-text display-1 text-muted mb-3"></i>
+                        <h4 class="text-muted">У вас пока нет документов</h4>
+                        <p class="text-muted">Нажмите кнопку "Добавить первый документ", чтобы начать работу</p>
+                    </div>
+                </div>
+            }
+            else
+            {
+                @foreach (var doc in Model.Documents)
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-file-earmark-text document-icon me-2"></i>
+                                    <h5 class="card-title mb-0 text-truncate">@doc.Title</h5>
+                                </div>
+                                <p class="card-text text-muted small mb-2">
+                                    <i class="bi bi-person me-1"></i>@doc.Author
+                                </p>
+                                <p class="card-text text-muted small mb-3">
+                                    <i class="bi bi-calendar me-1"></i>@doc.CreatedAt.ToString("MMM dd, yyyy")
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="status-badge bg-primary bg-opacity-10 text-primary">
+                                        @doc.Status
+                                    </span>
+                                    <div class="dropdown">
+                                        <button class="btn btn-link text-muted" data-bs-toggle="dropdown">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item" href="@Url.Action("Details", new { id = doc.Id })">
+                                                    <i class="bi bi-eye me-2"></i>Просмотр
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="@Url.Action("Edit", new { id = doc.Id })">
+                                                    <i class="bi bi-pencil me-2"></i>Редактировать
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="@Url.Action("Versions", new { id = doc.Id })">
+                                                    <i class="bi bi-clock-history me-2"></i>История версий
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item text-danger" href="#" onclick="deleteDocument(@doc.Id)">
+                                                    <i class="bi bi-trash me-2"></i>Удалить
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Initialize drag and drop
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#0d6efd';
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = '#dee2e6';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#dee2e6';
+
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                // Handle file upload
+            }
+        });
+
+        // Delete document function
+        function deleteDocument(id) {
+            if (confirm('Вы уверены, что хотите удалить этот документ?')) {
+                // Handle delete
+            }
+        }
+
+        // Filter functionality
+        document.getElementById('typeFilter').addEventListener('change', applyFilters);
+        document.getElementById('statusFilter').addEventListener('change', applyFilters);
+        document.getElementById('dateFrom').addEventListener('change', applyFilters);
+        document.getElementById('dateTo').addEventListener('change', applyFilters);
+
+        function applyFilters() {
+            // Handle filtering
+        }
+    </script>
+}

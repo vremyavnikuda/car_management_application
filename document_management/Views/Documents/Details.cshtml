@@ -1,0 +1,335 @@
+@model Document
+
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="document-viewer">
+    <!-- Left Panel - Document Preview -->
+    <div class="document-panel">
+        <div class="document-header">
+            <h3 class="mb-0">@Model.Title</h3>
+            <div class="document-actions">
+                <div class="btn-group">
+                    <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-pencil me-1"></i>Edit
+                    </a>
+                    <a href="@Url.Action("Download", new { id = Model.Id })" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-download me-1"></i>Download
+                    </a>
+                    <button class="btn btn-outline-primary btn-sm" id="toggleSidebar">
+                        <i class="bi bi-layout-sidebar-reverse"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="document-content">
+            @if (Model.DocumentType.ToLower() == "pdf")
+            {
+                <iframe src="@Url.Action("Preview", new { id = Model.Id })" class="document-preview" frameborder="0"
+                    type="application/pdf" width="100%" height="100%" id="pdfPreview" onerror="handlePdfError()"></iframe>
+            }
+            else
+            {
+                <div class="document-preview-placeholder">
+                    <i class="bi bi-file-earmark-text display-1"></i>
+                    <p class="mt-3">Preview not available for this file type</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Right Panel - Document Info & Version History -->
+    <div class="info-panel" id="infoPanel">
+        <div class="info-section">
+            <h4>Document Information</h4>
+            <div class="info-grid">
+                <div class="info-item">
+                    <i class="bi bi-person text-primary"></i>
+                    <div>
+                        <small>Author</small>
+                        <span>@Model.Author</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="bi bi-calendar text-primary"></i>
+                    <div>
+                        <small>Created</small>
+                        <span>@Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="bi bi-file-earmark text-primary"></i>
+                    <div>
+                        <small>Type</small>
+                        <span>@Model.DocumentType</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="bi bi-info-circle text-primary"></i>
+                    <div>
+                        <small>Status</small>
+                        <span class="status-badge">@Model.Status</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="version-section">
+            <h4>Version History</h4>
+            <div class="version-timeline">
+                @foreach (var version in Model.Versions.OrderByDescending(v => v.ModifiedAt))
+                {
+                    <div
+                        class="version-item @(version == Model.Versions.OrderByDescending(v => v.ModifiedAt).First() ? "current" : "")">
+                        <div class="version-marker"></div>
+                        <div class="version-content">
+                            <h6>Version @version.VersionNumber</h6>
+                            <p class="version-meta">
+                                <i class="bi bi-person-circle me-1"></i>@version.ModifiedBy
+                                <br>
+                                <i class="bi bi-clock me-1"></i>@version.ModifiedAt.ToString("MMM dd, yyyy HH:mm")
+                            </p>
+                            <p class="version-description">@version.ChangeDescription</p>
+                            <div class="version-actions">
+                                <button class="btn btn-link btn-sm" onclick="previewVersion(@version.Id)">
+                                    <i class="bi bi-eye me-1"></i>Preview
+                                </button>
+                                <a href="@Url.Action("DownloadVersion", new { id = version.Id })"
+                                    class="btn btn-link btn-sm">
+                                    <i class="bi bi-download me-1"></i>Download
+                                </a>
+                                <button class="btn btn-link btn-sm" onclick="restoreVersion(@version.Id)">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .document-viewer {
+            display: flex;
+            height: calc(100vh - 60px);
+            margin: -1rem;
+            background: #f8f9fa;
+        }
+
+        .document-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-right: 1px solid #dee2e6;
+        }
+
+        .document-header {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .document-content {
+            flex: 1;
+            overflow: auto;
+            padding: 1rem;
+        }
+
+        .document-preview {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .document-preview-placeholder {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+        }
+
+        .info-panel {
+            width: 400px;
+            background: white;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .info-panel.collapsed {
+            transform: translateX(400px);
+        }
+
+        .info-section,
+        .version-section {
+            padding: 1.5rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .info-item i {
+            font-size: 1.25rem;
+        }
+
+        .info-item div {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-item small {
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            background: rgba(var(--bs-primary-rgb), 0.1);
+            color: var(--bs-primary);
+        }
+
+        .version-timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .version-item {
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+
+        .version-marker {
+            position: absolute;
+            left: -2rem;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            background: #dee2e6;
+            border: 2px solid white;
+        }
+
+        .version-item.current .version-marker {
+            background: var(--bs-primary);
+        }
+
+        .version-item::before {
+            content: '';
+            position: absolute;
+            left: -1.6rem;
+            top: 1rem;
+            bottom: -0.5rem;
+            width: 2px;
+            background: #dee2e6;
+        }
+
+        .version-item:last-child::before {
+            display: none;
+        }
+
+        .version-content {
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+
+        .version-meta {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+        }
+
+        .version-description {
+            margin-bottom: 0.5rem;
+        }
+
+        .version-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        @@media (max-width: 992px) {
+            .info-panel {
+                position: fixed;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                z-index: 1000;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleBtn = document.getElementById('toggleSidebar');
+            const infoPanel = document.getElementById('infoPanel');
+            const pdfPreview = document.getElementById('pdfPreview');
+
+            // Проверяем загрузку PDF
+            if (pdfPreview) {
+                pdfPreview.addEventListener('load', function () {
+                    // PDF успешно загружен
+                    console.log('PDF loaded successfully');
+                });
+            }
+
+            toggleBtn.addEventListener('click', function () {
+                infoPanel.classList.toggle('collapsed');
+                toggleBtn.querySelector('i').classList.toggle('bi-layout-sidebar');
+                toggleBtn.querySelector('i').classList.toggle('bi-layout-sidebar-reverse');
+            });
+        });
+
+        function handlePdfError() {
+            const pdfPreview = document.getElementById('pdfPreview');
+            if (pdfPreview) {
+                const container = pdfPreview.parentElement;
+                container.innerHTML = `
+                            <div class="document-preview-placeholder">
+                                <i class="bi bi-exclamation-triangle display-1 text-warning"></i>
+                                <p class="mt-3">Не удалось загрузить предпросмотр PDF</p>
+                                <a href="@Url.Action("Download", new { id = Model.Id })" class="btn btn-outline-primary mt-2">
+                                    <i class="bi bi-download me-1"></i>Скачать документ
+                                </a>
+                            </div>
+                        `;
+            }
+        }
+
+        function previewVersion(versionId) {
+            // Implement version preview logic
+            console.log('Preview version:', versionId);
+        }
+
+        function restoreVersion(versionId) {
+            if (confirm('Are you sure you want to restore this version? This will create a new version with the restored content.')) {
+                // Implement version restore logic
+                console.log('Restore version:', versionId);
+            }
+        }
+    </script>
+}
