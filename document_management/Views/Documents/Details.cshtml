@@ -4,9 +4,160 @@
     ViewData["Title"] = Model.Title;
 }
 
+<style>
+    .document-viewer {
+        display: flex;
+        height: calc(100vh - 200px);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .document-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s ease;
+        min-width: 0;
+        /* Важно для корректной работы flex */
+    }
+
+    .info-panel {
+        width: 300px;
+        background: #f8f9fa;
+        border-left: 1px solid #dee2e6;
+        padding: 1rem;
+        overflow-y: auto;
+        transition: all 0.3s ease;
+        position: relative;
+        right: 0;
+    }
+
+    .info-panel.hidden {
+        position: absolute;
+        right: -300px;
+        /* Ширина панели */
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    .document-panel.expanded {
+        margin-right: 0;
+        width: 100%;
+    }
+
+    .document-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid #dee2e6;
+        background: white;
+    }
+
+    .document-content {
+        flex: 1;
+        overflow: hidden;
+        position: relative;
+        background: white;
+    }
+
+    .document-preview {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .document-preview-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #6c757d;
+        background: #f8f9fa;
+    }
+
+    #toggleSidebar {
+        transition: transform 0.3s ease;
+        z-index: 1;
+    }
+
+    #toggleSidebar.rotated {
+        transform: rotate(180deg);
+    }
+
+    /* Стили для информации о документе */
+    .info-section {
+        margin-bottom: 2rem;
+    }
+
+    .info-grid {
+        display: grid;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .info-item i {
+        font-size: 1.25rem;
+        color: var(--bs-primary);
+    }
+
+    .info-item div {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .info-item small {
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+
+    /* Стили для истории версий */
+    .version-section {
+        margin-top: 2rem;
+    }
+
+    .version-timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+
+    .version-item {
+        position: relative;
+        padding-bottom: 1.5rem;
+    }
+
+    .version-marker {
+        position: absolute;
+        left: -2rem;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        background: #dee2e6;
+        border: 2px solid white;
+    }
+
+    .version-item.current .version-marker {
+        background: var(--bs-primary);
+    }
+
+    .version-content {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
 <div class="document-viewer">
     <!-- Left Panel - Document Preview -->
-    <div class="document-panel">
+    <div class="document-panel" id="documentPanel">
         <div class="document-header">
             <h3 class="mb-0">@Model.Title</h3>
             <div class="document-actions">
@@ -17,17 +168,127 @@
                     <a href="@Url.Action("Download", new { id = Model.Id })" class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-download me-1"></i>Download
                     </a>
-                    <button class="btn btn-outline-primary btn-sm" id="toggleSidebar">
+                    <button class="btn btn-outline-primary btn-sm" id="toggleSidebar"
+                        title="Toggle Document Information">
                         <i class="bi bi-layout-sidebar-reverse"></i>
                     </button>
                 </div>
             </div>
         </div>
         <div class="document-content">
-            @if (Model.DocumentType.ToLower() == "pdf")
+            @if (Model.DocumentType.ToLower() == "pdf" || Model.DocumentType.ToLower() == "docx")
             {
-                <iframe src="@Url.Action("Preview", new { id = Model.Id })" class="document-preview" frameborder="0"
-                    type="application/pdf" width="100%" height="100%" id="pdfPreview" onerror="handlePdfError()"></iframe>
+                <div id="pdfViewer" style="width:100%;height:100%;border:none;overflow:auto;position:relative;">
+                    <div id="loadingIndicator"
+                        style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading document...</p>
+                    </div>
+                </div>
+
+                <!-- Load PDF.js -->
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+                <script>
+                    // Wait for PDF.js to load
+                    function loadPDF() {
+                        if (typeof pdfjsLib === 'undefined') {
+                            console.log('Waiting for PDF.js to load...');
+                            setTimeout(loadPDF, 100);
+                            return;
+                        }
+
+                        console.log('PDF.js loaded successfully');
+                        const viewer = document.getElementById('pdfViewer');
+                        const loadingIndicator = document.getElementById('loadingIndicator');
+
+                        // Set worker source
+                        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+                        let url = '@Url.Action("PreviewPdf", new { id = Model.Id })';
+                        console.log('Loading PDF from:', url);
+
+                        // Load the PDF
+                        pdfjsLib.getDocument(url).promise.then(function (pdf) {
+                            console.log('PDF loaded successfully, pages:', pdf.numPages);
+                            loadingIndicator.style.display = 'none';
+
+                            const numPages = pdf.numPages;
+                            const pageContainer = document.createElement('div');
+                            pageContainer.style.padding = '20px';
+                            viewer.appendChild(pageContainer);
+
+                            // Create canvas for each page
+                            for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+                                const canvas = document.createElement('canvas');
+                                canvas.className = 'pdf-page';
+                                pageContainer.appendChild(canvas);
+
+                                pdf.getPage(pageNum).then(function (page) {
+                                    console.log('Rendering page:', pageNum);
+                                    const viewport = page.getViewport({ scale: 1.5 });
+                                    canvas.width = viewport.width;
+                                    canvas.height = viewport.height;
+
+                                    const renderContext = {
+                                        canvasContext: canvas.getContext('2d'),
+                                        viewport: viewport
+                                    };
+
+                                    page.render(renderContext).promise.then(function () {
+                                        console.log('Page rendered:', pageNum);
+                                    }).catch(function (error) {
+                                        console.error('Error rendering page', pageNum, ':', error);
+                                        canvas.innerHTML = '<div class="alert alert-danger">Error rendering page ' + pageNum + '</div>';
+                                    });
+                                }).catch(function (error) {
+                                    console.error('Error loading page', pageNum, ':', error);
+                                    const errorDiv = document.createElement('div');
+                                    errorDiv.className = 'alert alert-danger';
+                                    errorDiv.textContent = 'Error loading page ' + pageNum + ': ' + error.message;
+                                    pageContainer.appendChild(errorDiv);
+                                });
+                            }
+                        }).catch(function (error) {
+                            console.error('Error loading PDF:', error);
+                            loadingIndicator.style.display = 'none';
+                            viewer.innerHTML = `
+                                        <div class="alert alert-danger m-3">
+                                            <h4 class="alert-heading">Error loading document preview</h4>
+                                            <p>${error.message}</p>
+                                            <hr>
+                                            <p class="mb-0">
+                                                <a href="@Url.Action("Download", new { id = Model.Id })" class="btn btn-primary">
+                                                    <i class="bi bi-download me-1"></i>Download Instead
+                                                </a>
+                                            </p>
+                                        </div>`;
+                        });
+                    }
+
+                    // Start loading when document is ready
+                    document.addEventListener('DOMContentLoaded', loadPDF);
+                </script>
+                <style>
+                    .pdf-page {
+                        margin: 10px auto;
+                        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                        display: block;
+                        background: white;
+                    }
+
+                    #pdfViewer {
+                        background: #f8f9fa;
+                    }
+
+                    #loadingIndicator {
+                        background: rgba(255, 255, 255, 0.9);
+                        padding: 20px;
+                        border-radius: 8px;
+                        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                    }
+                </style>
             }
             else
             {
@@ -111,213 +372,85 @@
     </div>
 </div>
 
-@section Styles {
-    <style>
-        .document-viewer {
-            display: flex;
-            height: calc(100vh - 60px);
-            margin: -1rem;
-            background: #f8f9fa;
-        }
-
-        .document-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: white;
-            border-right: 1px solid #dee2e6;
-        }
-
-        .document-header {
-            padding: 1rem;
-            border-bottom: 1px solid #dee2e6;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .document-content {
-            flex: 1;
-            overflow: auto;
-            padding: 1rem;
-        }
-
-        .document-preview {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        .document-preview-placeholder {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #6c757d;
-            background: #f8f9fa;
-            border-radius: 0.5rem;
-        }
-
-        .info-panel {
-            width: 400px;
-            background: white;
-            overflow-y: auto;
-            transition: transform 0.3s ease;
-        }
-
-        .info-panel.collapsed {
-            transform: translateX(400px);
-        }
-
-        .info-section,
-        .version-section {
-            padding: 1.5rem;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .info-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-        }
-
-        .info-item i {
-            font-size: 1.25rem;
-        }
-
-        .info-item div {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .info-item small {
-            color: #6c757d;
-            font-size: 0.875rem;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
-            background: rgba(var(--bs-primary-rgb), 0.1);
-            color: var(--bs-primary);
-        }
-
-        .version-timeline {
-            position: relative;
-            padding-left: 2rem;
-        }
-
-        .version-item {
-            position: relative;
-            padding-bottom: 1.5rem;
-        }
-
-        .version-marker {
-            position: absolute;
-            left: -2rem;
-            width: 1rem;
-            height: 1rem;
-            border-radius: 50%;
-            background: #dee2e6;
-            border: 2px solid white;
-        }
-
-        .version-item.current .version-marker {
-            background: var(--bs-primary);
-        }
-
-        .version-item::before {
-            content: '';
-            position: absolute;
-            left: -1.6rem;
-            top: 1rem;
-            bottom: -0.5rem;
-            width: 2px;
-            background: #dee2e6;
-        }
-
-        .version-item:last-child::before {
-            display: none;
-        }
-
-        .version-content {
-            background: #f8f9fa;
-            border-radius: 0.5rem;
-            padding: 1rem;
-        }
-
-        .version-meta {
-            font-size: 0.875rem;
-            color: #6c757d;
-            margin-bottom: 0.5rem;
-        }
-
-        .version-description {
-            margin-bottom: 0.5rem;
-        }
-
-        .version-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        @@media (max-width: 992px) {
-            .info-panel {
-                position: fixed;
-                right: 0;
-                top: 0;
-                bottom: 0;
-                z-index: 1000;
-            }
-        }
-    </style>
-}
-
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const toggleBtn = document.getElementById('toggleSidebar');
+            const toggleButton = document.getElementById('toggleSidebar');
             const infoPanel = document.getElementById('infoPanel');
-            const pdfPreview = document.getElementById('pdfPreview');
+            const documentPanel = document.getElementById('documentPanel');
+            let isPanelVisible = true;
 
-            // Проверяем загрузку PDF
-            if (pdfPreview) {
-                pdfPreview.addEventListener('load', function () {
-                    // PDF успешно загружен
-                    console.log('PDF loaded successfully');
-                });
+            function togglePanel() {
+                isPanelVisible = !isPanelVisible;
+
+                // Добавляем/убираем классы с задержкой для анимации
+                if (!isPanelVisible) {
+                    infoPanel.style.opacity = '0';
+                    setTimeout(() => {
+                        infoPanel.classList.add('hidden');
+                    }, 300);
+                } else {
+                    infoPanel.classList.remove('hidden');
+                    setTimeout(() => {
+                        infoPanel.style.opacity = '1';
+                    }, 50);
+                }
+
+                documentPanel.classList.toggle('expanded');
+                toggleButton.classList.toggle('rotated');
+
+                // Обновляем title кнопки
+                toggleButton.title = isPanelVisible ? 'Hide Document Information' : 'Show Document Information';
             }
 
-            toggleBtn.addEventListener('click', function () {
-                infoPanel.classList.toggle('collapsed');
-                toggleBtn.querySelector('i').classList.toggle('bi-layout-sidebar');
-                toggleBtn.querySelector('i').classList.toggle('bi-layout-sidebar-reverse');
-            });
+            toggleButton.addEventListener('click', togglePanel);
+
+            // DOCX preview logic (автозагрузка)
+            const docxContainer = document.getElementById('docxPreviewContainer');
+            if (docxContainer) {
+                docxContainer.innerHTML = '<div class="text-muted">Загрузка документа...</div>';
+                fetch('@Url.Action("Download", new { id = Model.Id })')
+                    .then(response => {
+                        if (!response.ok) throw new Error('Ошибка загрузки файла');
+                        return response.arrayBuffer();
+                    })
+                    .then(arrayBuffer => mammoth.convertToHtml({ arrayBuffer: arrayBuffer }))
+                    .then(result => {
+                        docxContainer.innerHTML = result.value;
+                    })
+                    .catch(err => {
+                        docxContainer.innerHTML = '<div class="alert alert-danger">Ошибка предпросмотра DOCX</div>';
+                    });
+            }
         });
 
         function handlePdfError() {
-            const pdfPreview = document.getElementById('pdfPreview');
-            if (pdfPreview) {
-                const container = pdfPreview.parentElement;
-                container.innerHTML = `
-                            <div class="document-preview-placeholder">
-                                <i class="bi bi-exclamation-triangle display-1 text-warning"></i>
-                                <p class="mt-3">Не удалось загрузить предпросмотр PDF</p>
-                                <a href="@Url.Action("Download", new { id = Model.Id })" class="btn btn-outline-primary mt-2">
-                                    <i class="bi bi-download me-1"></i>Скачать документ
-                                </a>
-                            </div>
-                        `;
-            }
+            const preview = document.getElementById('pdfPreview');
+            const placeholder = document.createElement('div');
+            placeholder.className = 'document-preview-placeholder';
+            placeholder.innerHTML = `
+                                                                                            <i class="bi bi-exclamation-triangle display-1 text-warning"></i>
+                                                                                            <p class="mt-3">Error loading PDF preview</p>
+                                                                                            <a href="@Url.Action("Download", new { id = Model.Id })" class="btn btn-primary mt-2">
+                                                                                                <i class="bi bi-download me-1"></i>Download Instead
+                                                                                            </a>
+                                                                                        `;
+            preview.parentNode.replaceChild(placeholder, preview);
+        }
+
+        function handleDocxError() {
+            const preview = document.getElementById('docxPreview');
+            const placeholder = document.createElement('div');
+            placeholder.className = 'document-preview-placeholder';
+            placeholder.innerHTML = `
+                                                                            <i class="bi bi-exclamation-triangle display-1 text-warning"></i>
+                                                                            <p class="mt-3">Error loading DOCX preview</p>
+                                                                            <a href="@Url.Action("Download", new { id = Model.Id })" class="btn btn-primary mt-2">
+                                                                                <i class="bi bi-download me-1"></i>Download Instead
+                                                                            </a>
+                                                                        `;
+            preview.parentNode.replaceChild(placeholder, preview);
         }
 
         function previewVersion(versionId) {

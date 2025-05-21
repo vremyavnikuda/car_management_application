@@ -5,6 +5,7 @@ using document_management.Data;
 using document_management.Models;
 using document_management.Models.ViewModels;
 using System.Security.Claims;
+using System.IO;
 
 namespace document_management.Controllers
 {
@@ -62,15 +63,29 @@ namespace document_management.Controllers
                     return View(model);
                 }
 
+                _logger.LogInformation("Processing file upload: {FileName}, Size={FileSize}, Type={ContentType}", 
+                    model.File.FileName, model.File.Length, model.File.ContentType);
+
                 var uniqueFileName = Guid.NewGuid().ToString() + "_" + model.File.FileName;
                 var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
+                // Save file to disk
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await model.File.CopyToAsync(stream);
                 }
 
-                _logger.LogInformation("File successfully saved to {FilePath}", filePath);
+                _logger.LogInformation("File successfully saved to disk: {FilePath}", filePath);
+
+                // Save file content to database
+                byte[] fileContent;
+                using (var memoryStream = new MemoryStream())
+                {
+                    await model.File.CopyToAsync(memoryStream);
+                    fileContent = memoryStream.ToArray();
+                }
+
+                _logger.LogInformation("File content saved to memory, size: {Size} bytes", fileContent.Length);
 
                 var document = new Document
                 {
@@ -79,11 +94,12 @@ namespace document_management.Controllers
                     Status = model.Status,
                     FilePath = filePath,
                     ContentType = model.File.ContentType,
+                    FileContent = fileContent,
                     Author = User.FindFirstValue(ClaimTypes.Email) ?? "Unknown",
                     CreatedAt = DateTime.UtcNow
                 };
 
-                // Создаем первую версию документа
+                // Create first version
                 var version = new DocumentVersion
                 {
                     VersionNumber = "1",
@@ -97,8 +113,8 @@ namespace document_management.Controllers
                 _context.Documents.Add(document);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Document {DocumentId} successfully created by user {User}", 
-                    document.Id, User.Identity?.Name);
+                _logger.LogInformation("Document saved to database: Id={Id}, Title={Title}, Type={Type}, ContentSize={ContentSize}", 
+                    document.Id, document.Title, document.DocumentType, document.FileContent?.Length ?? 0);
 
                 // Добавляем сообщение об успешной загрузке
                 TempData["SuccessMessage"] = $"Документ '{model.Title}' успешно загружен.";

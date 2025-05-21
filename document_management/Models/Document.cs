@@ -27,6 +27,8 @@ namespace document_management.Models
 
         public string? ContentType { get; set; }
 
+        public byte[]? FileContent { get; set; }
+
         public virtual ICollection<DocumentVersion> Versions { get; set; }
 
         public Document()

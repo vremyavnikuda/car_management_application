@@ -4,6 +4,9 @@
     ViewData["Title"] = "Documents";
 }
 
+<!-- Добавляем скрытое поле с токеном CSRF -->
+@Html.AntiForgeryToken()
+
 <div class="row">
     <!-- Sidebar with filters -->
     <div class="col-md-3">
@@ -46,9 +49,20 @@
                 <i class="bi bi-search search-icon"></i>
                 <input type="text" class="form-control search-box" placeholder="Поиск документов...">
             </div>
-            <a asp-controller="DocumentUpload" asp-action="Create" class="btn btn-primary">
-                <i class="bi bi-plus-lg me-1"></i>@(Model.HasDocuments ? "Добавить новый документ" : "Добавить первый документ")
-            </a>
+            <div class="btn-group">
+                @if (User.IsInRole("Admin"))
+                {
+                    <form asp-action="UpdateAllDocumentsContent" method="post" class="me-2">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Update Document Content
+                        </button>
+                    </form>
+                }
+                <a asp-controller="DocumentUpload" asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i>@(Model.HasDocuments ? "Добавить новый документ" : "Добавить первый документ")
+                </a>
+            </div>
         </div>
 
         <!-- Document cards -->
@@ -154,7 +168,28 @@
         // Delete document function
         function deleteDocument(id) {
             if (confirm('Вы уверены, что хотите удалить этот документ?')) {
-                // Handle delete
+                // Создаем форму для отправки POST-запроса
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("Delete", "Documents")';
+
+                // Добавляем скрытое поле с ID документа
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = id;
+                form.appendChild(idInput);
+
+                // Добавляем токен защиты от CSRF
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                form.appendChild(tokenInput);
+
+                // Добавляем форму на страницу и отправляем
+                document.body.appendChild(form);
+                form.submit();
             }
         }
 
