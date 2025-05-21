@@ -193,6 +193,12 @@ namespace document_management.Controllers
                 var memory = await System.IO.File.ReadAllBytesAsync(document.FilePath);
                 _logger.LogInformation("Document {DocumentId} successfully downloaded ({FileSize} bytes)", 
                     document.Id, memory.Length);
+
+                // Добавляем заголовки для поддержки Office Online Viewer
+                Response.Headers.Add("Access-Control-Allow-Origin", "*");
+                Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
+                Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+
                 return File(memory, document.ContentType ?? "application/octet-stream", Path.GetFileName(document.FilePath));
             }
             catch (Exception ex)
@@ -220,11 +226,71 @@ namespace document_management.Controllers
                 var memory = await System.IO.File.ReadAllBytesAsync(version.FilePath);
                 _logger.LogInformation("Version {VersionId} successfully downloaded ({FileSize} bytes)", 
                     version.Id, memory.Length);
+
+                // Добавляем заголовки для поддержки Office Online Viewer
+                Response.Headers.Add("Access-Control-Allow-Origin", "*");
+                Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
+                Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+
                 return File(memory, "application/octet-stream", Path.GetFileName(version.FilePath));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error downloading version {VersionId}", version.Id);
+                throw;
+            }
+        }
+
+        private string ConvertDocxToHtml(string filePath)
+        {
+            try
+            {
+                using (WordprocessingDocument doc = WordprocessingDocument.Open(filePath, false))
+                {
+                    var body = doc.MainDocumentPart?.Document.Body;
+                    if (body == null) return string.Empty;
+
+                    var html = new StringBuilder();
+                    html.AppendLine("<!DOCTYPE html>");
+                    html.AppendLine("<html>");
+                    html.AppendLine("<head>");
+                    html.AppendLine("<meta charset='utf-8'>");
+                    html.AppendLine("<style>");
+                    html.AppendLine("body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }");
+                    html.AppendLine("p { margin-bottom: 1em; }");
+                    html.AppendLine("h1, h2, h3, h4, h5, h6 { margin-top: 1.5em; margin-bottom: 0.5em; }");
+                    html.AppendLine("</style>");
+                    html.AppendLine("</head>");
+                    html.AppendLine("<body>");
+
+                    foreach (var element in body.Elements())
+                    {
+                        if (element is Paragraph paragraph)
+                        {
+                            var paragraphText = new StringBuilder();
+                            foreach (var run in paragraph.Elements<Run>())
+                            {
+                                var text = run.GetFirstChild<Text>();
+                                if (text != null)
+                                {
+                                    paragraphText.Append(text.Text);
+                                }
+                            }
+                            if (paragraphText.Length > 0)
+                            {
+                                html.AppendLine($"<p>{HttpUtility.HtmlEncode(paragraphText.ToString())}</p>");
+                            }
+                        }
+                    }
+
+                    html.AppendLine("</body>");
+                    html.AppendLine("</html>");
+                    return html.ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error converting DOCX to HTML for file {FilePath}", filePath);
                 throw;
             }
         }
