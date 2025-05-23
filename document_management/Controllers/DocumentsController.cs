@@ -195,9 +195,9 @@ namespace document_management.Controllers
                     document.Id, memory.Length);
 
                 // Добавляем заголовки для поддержки Office Online Viewer
-                Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
-                Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+                Response.Headers.Append("Access-Control-Allow-Origin", "*");
+                Response.Headers.Append("Access-Control-Allow-Methods", "GET, OPTIONS");
+                Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type");
 
                 return File(memory, document.ContentType ?? "application/octet-stream", Path.GetFileName(document.FilePath));
             }
@@ -228,9 +228,9 @@ namespace document_management.Controllers
                     version.Id, memory.Length);
 
                 // Добавляем заголовки для поддержки Office Online Viewer
-                Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
-                Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+                Response.Headers.Append("Access-Control-Allow-Origin", "*");
+                Response.Headers.Append("Access-Control-Allow-Methods", "GET, OPTIONS");
+                Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type");
 
                 return File(memory, "application/octet-stream", Path.GetFileName(version.FilePath));
             }

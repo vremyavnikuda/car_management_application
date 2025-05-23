@@ -20,19 +20,24 @@ namespace document_management.Controllers
         }
 
         [HttpGet]
-        public IActionResult Login(string returnUrl = null)
+        public IActionResult Login(string? returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
+        public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
-                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+                var result = await _signInManager.PasswordSignInAsync(
+                    model.Email ?? throw new ArgumentNullException(nameof(model.Email)),
+                    model.Password ?? throw new ArgumentNullException(nameof(model.Password)),
+                    model.RememberMe,
+                    lockoutOnFailure: false);
+
                 if (result.Succeeded)
                 {
                     return RedirectToLocal(returnUrl);
@@ -43,14 +48,14 @@ namespace document_management.Controllers
         }
 
         [HttpGet]
-        public IActionResult Register(string returnUrl = null)
+        public IActionResult Register(string? returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null)
+        public async Task<IActionResult> Register(RegisterViewModel model, string? returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
@@ -63,7 +68,10 @@ namespace document_management.Controllers
                     LastName = model.LastName
                 };
 
-                var result = await _userManager.CreateAsync(user, model.Password);
+                var result = await _userManager.CreateAsync(
+                    user,
+                    model.Password ?? throw new ArgumentNullException(nameof(model.Password)));
+
                 if (result.Succeeded)
                 {
                     await _signInManager.SignInAsync(user, isPersistent: false);
@@ -85,7 +93,7 @@ namespace document_management.Controllers
             return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
-        private IActionResult RedirectToLocal(string returnUrl)
+        private IActionResult RedirectToLocal(string? returnUrl)
         {
             if (Url.IsLocalUrl(returnUrl))
             {

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using document_management.Data;
 using document_management.Models;
+using document_management.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,33 +15,13 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-// Configure Identity
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
-{
-    options.Password.RequireDigit = true;
-    options.Password.RequireLowercase = true;
-    options.Password.RequireUppercase = true;
-    options.Password.RequireNonAlphanumeric = true;
-    options.Password.RequiredLength = 8;
-    
-    options.User.RequireUniqueEmail = true;
-    options.SignIn.RequireConfirmedAccount = false;
-})
-.AddEntityFrameworkStores<ApplicationDbContext>()
-.AddDefaultTokenProviders();
-
-// Configure cookie settings
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.Cookie.HttpOnly = true;
-    options.ExpireTimeSpan = TimeSpan.FromDays(7);
-    options.LoginPath = "/Account/Login";
-    options.LogoutPath = "/Account/Logout";
-    options.AccessDeniedPath = "/Account/AccessDenied";
-    options.SlidingExpiration = true;
-});
+// Configure Authentication
+builder.Services.AddAuthenticationServices();
 
 var app = builder.Build();
+
+// Автоматическое применение миграций при запуске
+DatabaseInitializer.ApplyMigrations(app.Services);
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
