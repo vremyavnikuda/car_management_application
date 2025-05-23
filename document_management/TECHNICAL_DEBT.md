@@ -45,8 +45,8 @@ This document summarizes the current technical debt of the project. Use it as a 
 
 ## 9. Migrations and DB Structure
 
-- [ ] Automate migration checks and application on startup.
-- [ ] Add scripts for backup and restore.
+- [x] Automate migration checks and application on startup.
+- [x] Add scripts for backup and restore.
 
 ## 10. UX/UI
 
