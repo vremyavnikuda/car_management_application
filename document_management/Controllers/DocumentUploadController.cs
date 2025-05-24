@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using document_management.Data;
 using document_management.Models;
 using document_management.Models.ViewModels;
+using document_management.Services;
 using System.Security.Claims;
 using System.IO;
 
@@ -13,18 +14,22 @@ namespace document_management.Controllers
     public class DocumentUploadController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly ILogger<DocumentUploadController> _logger;
+        private readonly ILoggingService _loggingService;
 
-        public DocumentUploadController(ApplicationDbContext context, ILogger<DocumentUploadController> logger)
+        public DocumentUploadController(
+            ApplicationDbContext context,
+            ILoggingService loggingService)
         {
             _context = context;
-            _logger = logger;
+            _loggingService = loggingService;
         }
 
         // GET: DocumentUpload/Create
         public IActionResult Create()
         {
-            _logger.LogInformation("User {User} accessed document upload form", User.Identity?.Name);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            _loggingService.LogUserAction(userId, "AccessUploadForm", "User accessed document upload form");
+            
             var viewModel = new DocumentUploadViewModel
             {
                 Title = string.Empty,
@@ -39,32 +44,35 @@ namespace document_management.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(DocumentUploadViewModel model)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
             if (!ModelState.IsValid)
             {
-                _logger.LogWarning("Invalid document upload attempt by user {User}", User.Identity?.Name);
+                _loggingService.LogUserAction(userId, "InvalidUploadAttempt", "Invalid document upload attempt");
                 return View(model);
             }
 
             try
             {
-                _logger.LogInformation("User {User} attempting to upload document: {Title}", 
-                    User.Identity?.Name, model.Title);
+                _loggingService.LogUserAction(userId, "UploadAttempt", 
+                    $"Attempting to upload document: {model.Title}");
 
                 var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
                 if (!Directory.Exists(uploadsFolder))
                 {
                     Directory.CreateDirectory(uploadsFolder);
-                    _logger.LogInformation("Created uploads directory: {UploadsFolder}", uploadsFolder);
+                    _loggingService.LogSystemEvent("CreateDirectory", $"Created uploads directory: {uploadsFolder}");
                 }
 
                 if (model.File == null || model.File.Length == 0)
                 {
+                    _loggingService.LogUserAction(userId, "EmptyFileUpload", "User attempted to upload empty file");
                     ModelState.AddModelError("File", "Пожалуйста, выберите файл для загрузки");
                     return View(model);
                 }
 
-                _logger.LogInformation("Processing file upload: {FileName}, Size={FileSize}, Type={ContentType}", 
-                    model.File.FileName, model.File.Length, model.File.ContentType);
+                _loggingService.LogUserAction(userId, "ProcessingUpload", 
+                    $"Processing file upload: {model.File.FileName} ({model.File.ContentType}, {model.File.Length} bytes)");
 
                 var uniqueFileName = Guid.NewGuid().ToString() + "_" + model.File.FileName;
                 var filePath = Path.Combine(uploadsFolder, uniqueFileName);
@@ -75,7 +83,7 @@ namespace document_management.Controllers
                     await model.File.CopyToAsync(stream);
                 }
 
-                _logger.LogInformation("File successfully saved to disk: {FilePath}", filePath);
+                _loggingService.LogSystemEvent("FileSaved", $"File saved to disk: {filePath}");
 
                 // Save file content to database
                 byte[] fileContent;
@@ -85,7 +93,8 @@ namespace document_management.Controllers
                     fileContent = memoryStream.ToArray();
                 }
 
-                _logger.LogInformation("File content saved to memory, size: {Size} bytes", fileContent.Length);
+                _loggingService.LogSystemEvent("ContentProcessed", 
+                    $"File content processed in memory, size: {fileContent.Length} bytes");
 
                 var document = new Document
                 {
@@ -113,8 +122,8 @@ namespace document_management.Controllers
                 _context.Documents.Add(document);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Document saved to database: Id={Id}, Title={Title}, Type={Type}, ContentSize={ContentSize}", 
-                    document.Id, document.Title, document.DocumentType, document.FileContent?.Length ?? 0);
+                _loggingService.LogDocumentOperation(userId, document.Id, "DocumentCreated", 
+                    $"Document created: {document.Title} (Type: {document.DocumentType}, Size: {document.FileContent?.Length ?? 0} bytes)");
 
                 // Добавляем сообщение об успешной загрузке
                 TempData["SuccessMessage"] = $"Документ '{model.Title}' успешно загружен.";
@@ -122,7 +131,8 @@ namespace document_management.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error uploading document for user {User}", User.Identity?.Name);
+                _loggingService.LogError(ex, userId, "UploadError", 
+                    $"Error uploading document: {model.Title}");
                 ModelState.AddModelError("", "Произошла ошибка при загрузке документа. Пожалуйста, попробуйте снова.");
                 return View(model);
             }

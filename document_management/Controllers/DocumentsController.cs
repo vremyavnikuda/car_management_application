@@ -9,6 +9,8 @@ using System.Text;
 using System.Web;
 using Aspose.Words;
 using AsposeDocument = Aspose.Words.Document;
+using ModelDocument = document_management.Models.Document;
+using document_management.Services;
 
 namespace document_management.Controllers
 {
@@ -16,17 +18,20 @@ namespace document_management.Controllers
     public class DocumentsController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly ILogger<DocumentsController> _logger;
+        private readonly ILoggingService _loggingService;
 
-        public DocumentsController(ApplicationDbContext context, ILogger<DocumentsController> logger)
+        public DocumentsController(
+            ApplicationDbContext context,
+            ILoggingService loggingService)
         {
             _context = context;
-            _logger = logger;
+            _loggingService = loggingService;
         }
 
         public async Task<IActionResult> Index()
         {
-            _logger.LogInformation("User {User} accessed documents list", User.Identity?.Name);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            _loggingService.LogUserAction(userId, "ViewDocumentsList", "Accessing documents list");
             
             var documents = await _context.Documents
                 .OrderByDescending(d => d.CreatedAt)
@@ -38,42 +43,42 @@ namespace document_management.Controllers
                 HasDocuments = documents.Any()
             };
 
-            _logger.LogInformation("User {User} has {DocumentCount} documents", 
-                User.Identity?.Name, documents.Count);
+            _loggingService.LogUserAction(userId, "ViewDocumentsList", $"Found {documents.Count} documents");
 
             return View(viewModel);
         }
 
         public async Task<IActionResult> Details(int id)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            _loggingService.LogDocumentOperation(userId, id, "ViewDetails", "Accessing document details");
+
             var document = await _context.Documents
                 .Include(d => d.Versions.OrderByDescending(v => v.ModifiedAt))
                 .FirstOrDefaultAsync(d => d.Id == id);
 
             if (document == null)
             {
-                _logger.LogWarning("Document {DocumentId} not found when accessed by user {User}", id, User.Identity?.Name);
+                _loggingService.LogSecurityEvent(userId, "DocumentNotFound", $"Attempted to access non-existent document ID: {id}");
                 return NotFound();
             }
 
-            _logger.LogInformation("User {User} viewed document {DocumentId} ({Title})", 
-                User.Identity?.Name, document.Id, document.Title);
+            _loggingService.LogDocumentOperation(userId, id, "ViewDetails", $"Viewed document: {document.Title}");
             return View(document);
         }
 
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            _loggingService.LogDocumentOperation(userId, id, "DeleteDocument", "Attempting to delete document");
+
             var document = await _context.Documents.FindAsync(id);
             if (document == null)
             {
-                _logger.LogWarning("Attempt to delete non-existent document {DocumentId} by user {User}", 
-                    id, User.Identity?.Name);
+                _loggingService.LogSecurityEvent(userId, "DeleteDocumentNotFound", $"Attempted to delete non-existent document ID: {id}");
                 return NotFound();
             }
-
-            _logger.LogInformation("User {User} initiated deletion of document {DocumentId} ({Title})", 
-                User.Identity?.Name, document.Id, document.Title);
 
             // Удаляем физический файл
             if (!string.IsNullOrEmpty(document.FilePath) && System.IO.File.Exists(document.FilePath))
@@ -81,63 +86,60 @@ namespace document_management.Controllers
                 try
                 {
                     System.IO.File.Delete(document.FilePath);
-                    _logger.LogInformation("Physical file deleted: {FilePath}", document.FilePath);
+                    _loggingService.LogSystemEvent("FileDelete", $"Physical file deleted: {document.FilePath}");
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error deleting physical file {FilePath}", document.FilePath);
+                    _loggingService.LogError(ex, userId, "DeleteFile", $"Error deleting file: {document.FilePath}");
                 }
             }
 
             _context.Documents.Remove(document);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Document {DocumentId} ({Title}) successfully deleted by user {User}", 
-                document.Id, document.Title, User.Identity?.Name);
+            _loggingService.LogDocumentOperation(userId, id, "DeleteDocument", $"Document deleted: {document.Title}");
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
         public async Task<IActionResult> UpdateDocument(int id, string title, string status, IFormFile? file)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            _loggingService.LogDocumentOperation(userId, id, "UpdateDocument", "Starting document update");
+
             var document = await _context.Documents.FindAsync(id);
             if (document == null)
             {
-                _logger.LogWarning("Attempt to update non-existent document {DocumentId} by user {User}", 
-                    id, User.Identity?.Name);
+                _loggingService.LogSecurityEvent(userId, "UpdateDocumentNotFound", $"Attempted to update non-existent document ID: {id}");
                 return NotFound();
             }
 
-            _logger.LogInformation("User {User} updating document {DocumentId} ({Title})", 
-                User.Identity?.Name, document.Id, document.Title);
-
-            // Обновляем основные данные
-            document.Title = title;
-            document.Status = status;
-
-            // Если загружен новый файл
-            if (file != null)
+            try
             {
-                _logger.LogInformation("New file upload for document {DocumentId}: {FileName} ({ContentType}, {FileSize} bytes)", 
-                    document.Id, file.FileName, file.ContentType, file.Length);
+                // Обновляем основные данные
+                document.Title = title;
+                document.Status = status;
 
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-                if (!Directory.Exists(uploadsFolder))
+                // Если загружен новый файл
+                if (file != null)
                 {
-                    Directory.CreateDirectory(uploadsFolder);
-                    _logger.LogInformation("Created uploads directory: {UploadsFolder}", uploadsFolder);
-                }
+                    _loggingService.LogDocumentOperation(userId, id, "FileUpload", 
+                        $"New file upload: {file.FileName} ({file.ContentType}, {file.Length} bytes)");
 
-                var uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
-                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                        _loggingService.LogSystemEvent("CreateDirectory", $"Created uploads directory: {uploadsFolder}");
+                    }
 
-                try
-                {
+                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
                         await file.CopyToAsync(stream);
                     }
-                    _logger.LogInformation("File successfully saved to {FilePath}", filePath);
 
                     // Создаем новую версию
                     var version = new DocumentVersion
@@ -145,7 +147,7 @@ namespace document_management.Controllers
                         DocumentId = document.Id,
                         VersionNumber = (document.Versions.Count + 1).ToString(),
                         FilePath = filePath,
-                        ModifiedBy = User.FindFirstValue(ClaimTypes.Email) ?? "Unknown",
+                        ModifiedBy = userId,
                         ModifiedAt = DateTime.UtcNow,
                         ChangeDescription = "Updated document and file"
                     };
@@ -154,21 +156,22 @@ namespace document_management.Controllers
                     document.FilePath = filePath;
                     document.ContentType = file.ContentType;
 
-                    _logger.LogInformation("New version {VersionNumber} created for document {DocumentId}", 
-                        version.VersionNumber, document.Id);
+                    _loggingService.LogDocumentOperation(userId, id, "NewVersion", 
+                        $"Created version {version.VersionNumber}");
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error saving uploaded file for document {DocumentId}", document.Id);
-                    throw;
-                }
+
+                await _context.SaveChangesAsync();
+                _loggingService.LogDocumentOperation(userId, id, "UpdateDocument", 
+                    $"Document updated successfully: {document.Title}");
+
+                return RedirectToAction(nameof(Details), new { id = document.Id });
             }
-
-            await _context.SaveChangesAsync();
-            _logger.LogInformation("Document {DocumentId} successfully updated by user {User}", 
-                document.Id, User.Identity?.Name);
-
-            return RedirectToAction(nameof(Details), new { id = document.Id });
+            catch (Exception ex)
+            {
+                _loggingService.LogError(ex, userId, "UpdateDocument", 
+                    $"Error updating document ID: {id}");
+                throw;
+            }
         }
 
         public async Task<IActionResult> Download(int id)
@@ -180,19 +183,19 @@ namespace document_management.Controllers
                 return File(document.FileContent, "application/pdf");
             if (document == null || string.IsNullOrEmpty(document.FilePath) || !System.IO.File.Exists(document.FilePath))
             {
-                _logger.LogWarning("Attempt to download non-existent or missing file for document {DocumentId} by user {User}", 
-                    id, User.Identity?.Name);
+                _loggingService.LogSecurityEvent(User.FindFirstValue(ClaimTypes.NameIdentifier), "DownloadNotFound", 
+                    $"Attempt to download non-existent or missing file for document ID: {id}");
                 return NotFound();
             }
 
-            _logger.LogInformation("User {User} downloading document {DocumentId} ({Title})", 
-                User.Identity?.Name, document.Id, document.Title);
+            _loggingService.LogDocumentOperation(User.FindFirstValue(ClaimTypes.NameIdentifier), id, "Download", 
+                $"Downloading document: {document.Title}");
 
             try
             {
                 var memory = await System.IO.File.ReadAllBytesAsync(document.FilePath);
-                _logger.LogInformation("Document {DocumentId} successfully downloaded ({FileSize} bytes)", 
-                    document.Id, memory.Length);
+                _loggingService.LogDocumentOperation(User.FindFirstValue(ClaimTypes.NameIdentifier), id, "DownloadComplete", 
+                    $"Document downloaded ({memory.Length} bytes)");
 
                 // Добавляем заголовки для поддержки Office Online Viewer
                 Response.Headers.Append("Access-Control-Allow-Origin", "*");
@@ -203,31 +206,33 @@ namespace document_management.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error downloading document {DocumentId}", document.Id);
+                _loggingService.LogError(ex, User.FindFirstValue(ClaimTypes.NameIdentifier), "Download", 
+                    $"Error downloading document ID: {id}");
                 throw;
             }
         }
 
         public async Task<IActionResult> DownloadVersion(int versionId)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var version = await _context.DocumentVersions.FindAsync(versionId);
+            
             if (version == null || string.IsNullOrEmpty(version.FilePath) || !System.IO.File.Exists(version.FilePath))
             {
-                _logger.LogWarning("Attempt to download non-existent or missing version {VersionId} by user {User}", 
-                    versionId, User.Identity?.Name);
+                _loggingService.LogSecurityEvent(userId, "DownloadVersionNotFound", 
+                    $"Attempted to download non-existent or missing version ID: {versionId}");
                 return NotFound();
             }
 
-            _logger.LogInformation("User {User} downloading version {VersionId} of document {DocumentId}", 
-                User.Identity?.Name, version.Id, version.DocumentId);
+            _loggingService.LogDocumentOperation(userId, version.DocumentId, "DownloadVersion", 
+                $"Downloading version {version.VersionNumber}");
 
             try
             {
                 var memory = await System.IO.File.ReadAllBytesAsync(version.FilePath);
-                _logger.LogInformation("Version {VersionId} successfully downloaded ({FileSize} bytes)", 
-                    version.Id, memory.Length);
+                _loggingService.LogDocumentOperation(userId, version.DocumentId, "DownloadComplete", 
+                    $"Version {version.VersionNumber} downloaded ({memory.Length} bytes)");
 
-                // Добавляем заголовки для поддержки Office Online Viewer
                 Response.Headers.Append("Access-Control-Allow-Origin", "*");
                 Response.Headers.Append("Access-Control-Allow-Methods", "GET, OPTIONS");
                 Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type");
@@ -236,55 +241,84 @@ namespace document_management.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error downloading version {VersionId}", version.Id);
+                _loggingService.LogError(ex, userId, "DownloadVersion", 
+                    $"Error downloading version ID: {versionId}");
                 throw;
             }
         }
 
         public async Task<IActionResult> Preview(int id)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            _loggingService.LogDocumentOperation(userId, id, "Preview", "Starting document preview");
+
             var document = await _context.Documents.FindAsync(id);
             if (document == null)
             {
-                _logger.LogWarning("Attempt to preview non-existent document {DocumentId} by user {User}", id, User.Identity?.Name);
+                _loggingService.LogSecurityEvent(userId, "PreviewNotFound", 
+                    $"Attempted to preview non-existent document ID: {id}");
                 return NotFound();
             }
 
-            _logger.LogInformation("User {User} previewing document {DocumentId} ({Title})", User.Identity?.Name, document.Id, document.Title);
-
-            switch (document.DocumentType.ToLower())
+            try
             {
-                case "pdf":
-                    if (document.FileContent != null)
-                        return File(document.FileContent, "application/pdf");
-                    if (!string.IsNullOrEmpty(document.FilePath) && System.IO.File.Exists(document.FilePath))
-                        return File(await System.IO.File.ReadAllBytesAsync(document.FilePath), "application/pdf");
-                    return NotFound();
-                case "docx":
-                    // Для DOCX просто редиректим на PreviewPdf (Aspose.Words)
-                    return RedirectToAction("PreviewPdf", new { id });
-                default:
-                    return BadRequest($"Preview is not available for {document.DocumentType} documents");
+                switch (document.DocumentType.ToLower())
+                {
+                    case "pdf":
+                        if (document.FileContent != null)
+                        {
+                            _loggingService.LogDocumentOperation(userId, id, "PreviewPDF", 
+                                "Serving PDF from database");
+                            return File(document.FileContent, "application/pdf");
+                        }
+                        if (!string.IsNullOrEmpty(document.FilePath) && System.IO.File.Exists(document.FilePath))
+                        {
+                            _loggingService.LogDocumentOperation(userId, id, "PreviewPDF", 
+                                "Serving PDF from file system");
+                            return File(await System.IO.File.ReadAllBytesAsync(document.FilePath), "application/pdf");
+                        }
+                        _loggingService.LogError(new FileNotFoundException(), userId, "PreviewPDF", 
+                            $"PDF file not found for document ID: {id}");
+                        return NotFound();
+                    case "docx":
+                        _loggingService.LogDocumentOperation(userId, id, "PreviewDOCX", 
+                            "Redirecting to PDF preview for DOCX");
+                        return RedirectToAction("PreviewPdf", new { id });
+                    default:
+                        _loggingService.LogError(new NotSupportedException(), userId, "Preview", 
+                            $"Unsupported document type: {document.DocumentType}");
+                        return BadRequest($"Preview is not available for {document.DocumentType} documents");
+                }
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError(ex, userId, "Preview", 
+                    $"Error previewing document ID: {id}");
+                throw;
             }
         }
 
-        private async Task UpdateDocumentContent(document_management.Models.Document document)
+        private async Task UpdateDocumentContent(ModelDocument document)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
             if (document.FileContent == null && !string.IsNullOrEmpty(document.FilePath) && System.IO.File.Exists(document.FilePath))
             {
-                _logger.LogInformation("Updating document {DocumentId} content from file {FilePath}", 
-                    document.Id, document.FilePath);
+                _loggingService.LogDocumentOperation(userId, document.Id, "UpdateContent", 
+                    $"Updating document content from file: {document.FilePath}");
 
                 try
                 {
                     document.FileContent = await System.IO.File.ReadAllBytesAsync(document.FilePath);
                     await _context.SaveChangesAsync();
-                    _logger.LogInformation("Document {DocumentId} content updated successfully, size: {Size} bytes", 
-                        document.Id, document.FileContent.Length);
+                    _loggingService.LogDocumentOperation(userId, document.Id, "UpdateContent", 
+                        $"Content updated successfully, size: {document.FileContent.Length} bytes");
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error updating document {DocumentId} content", document.Id);
+                    _loggingService.LogError(ex, userId, "UpdateContent", 
+                        $"Error updating document content for ID: {document.Id}");
+                    throw;
                 }
             }
         }
@@ -292,26 +326,26 @@ namespace document_management.Controllers
         // --- PDF Preview for DOCX using Aspose.Words ---
         public async Task<IActionResult> PreviewPdf(int id)
         {
-            _logger.LogInformation("PreviewPdf called for document {DocumentId}", id);
+            _loggingService.LogDocumentOperation(User.FindFirstValue(ClaimTypes.NameIdentifier), id, "PreviewPdf", "Starting PDF preview");
 
             var document = await _context.Documents.FindAsync(id);
             if (document == null)
             {
-                _logger.LogWarning("Document {DocumentId} not found", id);
+                _loggingService.LogSecurityEvent(User.FindFirstValue(ClaimTypes.NameIdentifier), "PreviewPdfNotFound", 
+                    $"Document {id} not found");
                 return NotFound($"Document {id} not found");
             }
 
             // Try to update document content if missing
             await UpdateDocumentContent(document);
 
-            _logger.LogInformation("Document found: Id={Id}, Type={Type}, HasContent={HasContent}", 
-                document.Id, 
-                document.DocumentType,
-                document.FileContent != null);
+            _loggingService.LogDocumentOperation(User.FindFirstValue(ClaimTypes.NameIdentifier), id, "PreviewPdf", 
+                $"Document found: Id={id}, Type={document.DocumentType}, HasContent={document.FileContent != null}");
 
             if (document.FileContent == null || document.FileContent.Length == 0)
             {
-                _logger.LogWarning("Document {DocumentId} has no content", id);
+                _loggingService.LogSecurityEvent(User.FindFirstValue(ClaimTypes.NameIdentifier), "PreviewPdfNoContent", 
+                    $"Document {id} has no content");
                 return NotFound($"Document {id} has no content");
             }
 
@@ -319,30 +353,35 @@ namespace document_management.Controllers
             {
                 if (document.DocumentType.ToLower() == "pdf")
                 {
-                    _logger.LogInformation("Serving PDF document directly, size: {Size} bytes", document.FileContent.Length);
+                    _loggingService.LogDocumentOperation(User.FindFirstValue(ClaimTypes.NameIdentifier), id, "PreviewPdfPDF", 
+                        $"Serving PDF document directly, size: {document.FileContent.Length} bytes");
                     return File(document.FileContent, "application/pdf");
                 }
                 else if (document.DocumentType.ToLower() == "docx")
                 {
-                    _logger.LogInformation("Converting DOCX to PDF, input size: {Size} bytes", document.FileContent.Length);
+                    _loggingService.LogDocumentOperation(User.FindFirstValue(ClaimTypes.NameIdentifier), id, "PreviewPdfDOCX", 
+                        $"Converting DOCX to PDF, input size: {document.FileContent.Length} bytes");
                     using (var inputStream = new MemoryStream(document.FileContent))
                     using (var outputStream = new MemoryStream())
                     {
                         var doc = new AsposeDocument(inputStream);
                         doc.Save(outputStream, Aspose.Words.SaveFormat.Pdf);
-                        _logger.LogInformation("DOCX successfully converted to PDF, output size: {Size} bytes", outputStream.Length);
+                        _loggingService.LogDocumentOperation(User.FindFirstValue(ClaimTypes.NameIdentifier), id, "PreviewPdfDOCXComplete", 
+                            $"DOCX successfully converted to PDF, output size: {outputStream.Length} bytes");
                         return File(outputStream.ToArray(), "application/pdf");
                     }
                 }
                 else
                 {
-                    _logger.LogWarning("Unsupported document type: {DocumentType}", document.DocumentType);
+                    _loggingService.LogSecurityEvent(User.FindFirstValue(ClaimTypes.NameIdentifier), "PreviewPdfUnsupported", 
+                        $"Unsupported document type: {document.DocumentType}");
                     return BadRequest($"Unsupported file type: {document.DocumentType}");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing document {DocumentId}", id);
+                _loggingService.LogError(ex, User.FindFirstValue(ClaimTypes.NameIdentifier), "PreviewPdf", 
+                    $"Error processing document ID: {id}");
                 return StatusCode(500, $"Error processing document: {ex.Message}");
             }
         }
@@ -352,10 +391,13 @@ namespace document_management.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateAllDocumentsContent()
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            _loggingService.LogUserAction(userId, "UpdateAllDocuments", "Starting bulk document content update");
+
             var documents = await _context.Documents.ToListAsync();
             var updatedCount = 0;
 
-            foreach (document_management.Models.Document document in documents)
+            foreach (ModelDocument document in documents)
             {
                 if (document.FileContent == null && !string.IsNullOrEmpty(document.FilePath) && System.IO.File.Exists(document.FilePath))
                 {
@@ -363,10 +405,13 @@ namespace document_management.Controllers
                     {
                         document.FileContent = await System.IO.File.ReadAllBytesAsync(document.FilePath);
                         updatedCount++;
+                        _loggingService.LogDocumentOperation(userId, document.Id, "BulkUpdateContent", 
+                            $"Updated content for document: {document.Title}");
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Error updating document {DocumentId} content", document.Id);
+                        _loggingService.LogError(ex, userId, "BulkUpdateContent", 
+                            $"Error updating content for document ID: {document.Id}");
                     }
                 }
             }
@@ -374,7 +419,8 @@ namespace document_management.Controllers
             if (updatedCount > 0)
             {
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("Updated content for {Count} documents", updatedCount);
+                _loggingService.LogUserAction(userId, "UpdateAllDocuments", 
+                    $"Completed bulk update, updated {updatedCount} documents");
             }
 
             return RedirectToAction(nameof(Index));

@@ -3,8 +3,24 @@ using Microsoft.EntityFrameworkCore;
 using document_management.Data;
 using document_management.Models;
 using document_management.Services;
+using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+    .Enrich.FromLogContext()
+    .WriteTo.Console(
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .WriteTo.File("logs/app.log",
+        rollingInterval: RollingInterval.Day,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -17,6 +33,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Configure Authentication
 builder.Services.AddAuthenticationServices();
+
+// Register LoggingService
+builder.Services.AddScoped<ILoggingService, LoggingService>();
 
 var app = builder.Build();
 
@@ -44,4 +63,16 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapRazorPages();
 
-app.Run();
+try
+{
+    Log.Information("Starting web application");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
