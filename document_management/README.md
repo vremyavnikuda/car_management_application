@@ -23,12 +23,5 @@
 
 ### Выполняем миграцию базы данных
 
-```sh
-dotnet ef migrations add InitialCreate ––project document_management.csproj
-```
-
-### Обновляем(применяем) все отложенные изменения миграции базы данных
-
-```sh
-dotnet ef database update ––project document_management.csproj
-```
+Выполнять миграцию перед запуском app не нужно , так как она применяется `автоматически` + перед этим создается зеркало 
+для восставновления 
