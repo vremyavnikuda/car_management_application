@@ -37,7 +37,7 @@ This document summarizes the current technical debt of the project. Use it as a 
 
 ## 7. Logging
 
-- [ ] Standardize logging format and coverage (log all key actions and errors).
+- [x] Standardize logging format and coverage (log all key actions and errors).
 
 ## 8. Documentation
 
