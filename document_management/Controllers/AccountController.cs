@@ -23,6 +23,7 @@ namespace document_management.Controllers
             _loggingService = loggingService;
         }
 
+        // GET  Account/Login
         [HttpGet]
         public IActionResult Login(string? returnUrl = null)
         {
@@ -31,6 +32,7 @@ namespace document_management.Controllers
             return View();
         }
 
+        // POST Account/Login
         [HttpPost]
         public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
@@ -58,6 +60,7 @@ namespace document_management.Controllers
             return View(model);
         }
 
+        // GET Account/Register
         [HttpGet]
         public IActionResult Register(string? returnUrl = null)
         {
@@ -66,6 +69,7 @@ namespace document_management.Controllers
             return View();
         }
 
+        // POST Account/Register
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel model, string? returnUrl = null)
         {
@@ -74,9 +78,9 @@ namespace document_management.Controllers
             {
                 _loggingService.LogUserAction("anonymous", "RegisterAttempt", $"Registration attempt for email: {model.Email}");
 
-                var user = new ApplicationUser 
-                { 
-                    UserName = model.Email, 
+                var user = new ApplicationUser
+                {
+                    UserName = model.Email,
                     Email = model.Email,
                     FirstName = model.FirstName,
                     LastName = model.LastName
@@ -88,11 +92,11 @@ namespace document_management.Controllers
 
                 if (result.Succeeded)
                 {
-                    _loggingService.LogSecurityEvent(user.Id, "RegisterSuccess", 
+                    _loggingService.LogSecurityEvent(user.Id, "RegisterSuccess",
                         $"New user registered: {model.Email}");
 
                     await _signInManager.SignInAsync(user, isPersistent: false);
-                    _loggingService.LogSecurityEvent(user.Id, "AutoLogin", 
+                    _loggingService.LogSecurityEvent(user.Id, "AutoLogin",
                         $"User automatically logged in after registration: {model.Email}");
 
                     return RedirectToLocal(returnUrl);
@@ -101,22 +105,23 @@ namespace document_management.Controllers
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
-                    _loggingService.LogSecurityEvent("anonymous", "RegisterError", 
+                    _loggingService.LogSecurityEvent("anonymous", "RegisterError",
                         $"Registration error for {model.Email}: {error.Description}");
                 }
             }
             return View(model);
         }
 
+        // POST Account/Logout
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var userEmail = User.FindFirstValue(ClaimTypes.Email);
-            
+
             await _signInManager.SignOutAsync();
             _loggingService.LogSecurityEvent(userId, "Logout", $"User logged out: {userEmail}");
-            
+
             return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
@@ -132,4 +137,4 @@ namespace document_management.Controllers
             }
         }
     }
-} 
+}

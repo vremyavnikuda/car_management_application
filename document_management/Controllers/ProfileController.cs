@@ -121,7 +121,6 @@ public class ProfileController : Controller
                 EditedDocuments = editedDocuments
             };
 
-            // Try to get the user's first document creation date as a proxy for registration date
             var firstDocument = await _context.Documents
                 .Where(d => d.Author == user.Email)
                 .OrderBy(d => d.CreatedAt)

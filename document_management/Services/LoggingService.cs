@@ -5,7 +5,7 @@ namespace document_management.Services
 {
     public interface ILoggingService
     {
-        void LogUserAction(string userId, string action, string details, [CallerMemberName] string methodName = "");
+        void LogUserAction(string? userId, string action, string details, [CallerMemberName] string methodName = "");
         void LogDocumentOperation(string userId, int documentId, string operation, string details, [CallerMemberName] string methodName = "");
         void LogSecurityEvent(string userId, string eventType, string details, [CallerMemberName] string methodName = "");
         void LogDatabaseOperation(string operation, string details, bool success, [CallerMemberName] string methodName = "");
@@ -22,7 +22,7 @@ namespace document_management.Services
             _logger = logger;
         }
 
-        public void LogUserAction(string userId, string action, string details, [CallerMemberName] string methodName = "")
+        public void LogUserAction(string? userId, string action, string details, [CallerMemberName] string methodName = "")
         {
             _logger.LogInformation(
                 "User Action: {Action} | User: {UserId} | Method: {Method} | Details: {Details}",

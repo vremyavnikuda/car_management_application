@@ -77,15 +77,15 @@ namespace document_management.Controllers
                 var uniqueFileName = Guid.NewGuid().ToString() + "_" + model.File.FileName;
                 var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-                // Save file to disk
+                // Сохраняем файл локально
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await model.File.CopyToAsync(stream);
-                }
+                }   
 
                 _loggingService.LogSystemEvent("FileSaved", $"File saved to disk: {filePath}");
 
-                // Save file content to database
+                // Сохраняем содержимое файла в базе данных
                 byte[] fileContent;
                 using (var memoryStream = new MemoryStream())
                 {
@@ -108,7 +108,7 @@ namespace document_management.Controllers
                     CreatedAt = DateTime.UtcNow
                 };
 
-                // Create first version
+                // Создаем первую версию документа
                 var version = new DocumentVersion
                 {
                     VersionNumber = "1",

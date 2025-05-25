@@ -5,9 +5,6 @@ using document_management.Data;
 using document_management.Models;
 using System.Security.Claims;
 using document_management.Models.ViewModels;
-using System.Text;
-using System.Web;
-using Aspose.Words;
 using AsposeDocument = Aspose.Words.Document;
 using ModelDocument = document_management.Models.Document;
 using document_management.Services;
@@ -323,7 +320,7 @@ namespace document_management.Controllers
             }
         }
 
-        // --- PDF Preview for DOCX using Aspose.Words ---
+        // PDF Preview for DOCX using Aspose.Words
         public async Task<IActionResult> PreviewPdf(int id)
         {
             _loggingService.LogDocumentOperation(User.FindFirstValue(ClaimTypes.NameIdentifier), id, "PreviewPdf", "Starting PDF preview");
