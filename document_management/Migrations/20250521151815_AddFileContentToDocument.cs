@@ -4,10 +4,8 @@
 
 namespace document_management.Migrations
 {
-    /// <inheritdoc />
     public partial class AddFileContentToDocument : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<byte[]>(
@@ -17,7 +15,6 @@ namespace document_management.Migrations
                 nullable: true);
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
