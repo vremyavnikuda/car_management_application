@@ -18,7 +18,6 @@
         flex-direction: column;
         transition: all 0.3s ease;
         min-width: 0;
-        /* Важно для корректной работы flex */
     }
 
     .info-panel {
@@ -35,7 +34,6 @@
     .info-panel.hidden {
         position: absolute;
         right: -300px;
-        /* Ширина панели */
         opacity: 0;
         visibility: hidden;
     }
@@ -86,7 +84,6 @@
         transform: rotate(180deg);
     }
 
-    /* Стили для информации о документе */
     .info-section {
         margin-bottom: 2rem;
     }
@@ -118,7 +115,6 @@
         font-size: 0.875rem;
     }
 
-    /* Стили для истории версий */
     .version-section {
         margin-top: 2rem;
     }
@@ -185,7 +181,6 @@
         </div>
     </div>
 
-    <!-- Right Panel - Document Info & Version History -->
     <div class="info-panel" id="infoPanel">
         <div class="info-section">
             <h4>Document Information</h4>

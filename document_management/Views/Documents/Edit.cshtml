@@ -84,7 +84,6 @@
 
 @section Scripts {
     <script>
-        // Initialize drag and drop
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
 
@@ -105,7 +104,6 @@
 
             if (e.dataTransfer.files.length) {
                 fileInput.files = e.dataTransfer.files;
-                // Update UI to show selected file
                 const fileName = e.dataTransfer.files[0].name;
                 dropZone.querySelector('p').textContent = `Selected: ${fileName}`;
             }

@@ -4,7 +4,6 @@
 }
 
 <div class="container py-4">
-    <!-- Основная информация -->
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="card border-0 shadow-sm">
@@ -56,7 +55,6 @@
         </div>
     </div>
 
-    <!-- Последние активности -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-white">
             <h5 class="card-title mb-0">Последние активности</h5>
@@ -100,7 +98,6 @@
     </div>
 
     <div class="row">
-        <!-- Созданные документы -->
         <div class="col-md-6">
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white">
@@ -136,7 +133,6 @@
             </div>
         </div>
 
-        <!-- Отредактированные документы -->
         <div class="col-md-6">
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white">
@@ -174,7 +170,6 @@
     </div>
 </div>
 
-<!-- Модальное окно редактирования профиля -->
 <div class="modal fade" id="editProfileModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -263,7 +258,7 @@
 @section Scripts {
     <script>
         function saveProfile() {
-            // Здесь будет логика сохранения профиля
+            // TODO:Здесь будет логика сохранения профиля
             // Пока просто закрываем модальное окно
             $('#editProfileModal').modal('hide');
         }

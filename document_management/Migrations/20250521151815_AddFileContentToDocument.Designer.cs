@@ -15,7 +15,6 @@ namespace document_management.Migrations
     [Migration("20250521151815_AddFileContentToDocument")]
     partial class AddFileContentToDocument
     {
-        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

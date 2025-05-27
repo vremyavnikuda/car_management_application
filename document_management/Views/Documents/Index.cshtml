@@ -4,11 +4,9 @@
     ViewData["Title"] = "Documents";
 }
 
-<!-- Добавляем скрытое поле с токеном CSRF -->
 @Html.AntiForgeryToken()
 
 <div class="row">
-    <!-- Sidebar with filters -->
     <div class="col-md-3">
         <div class="filter-section">
             <h5 class="mb-3">Filters</h5>
@@ -41,9 +39,7 @@
         </div>
     </div>
 
-    <!-- Main content -->
     <div class="col-md-9">
-        <!-- Search and actions bar -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="position-relative flex-grow-1 me-3">
                 <i class="bi bi-search search-icon"></i>
@@ -65,7 +61,6 @@
             </div>
         </div>
 
-        <!-- Document cards -->
         <div class="row g-4">
             @if (!Model.HasDocuments)
             {
@@ -140,7 +135,6 @@
 
 @section Scripts {
     <script>
-        // Initialize drag and drop
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
 
@@ -161,46 +155,38 @@
 
             if (e.dataTransfer.files.length) {
                 fileInput.files = e.dataTransfer.files;
-                // Handle file upload
             }
         });
 
-        // Delete document function
         function deleteDocument(id) {
             if (confirm('Вы уверены, что хотите удалить этот документ?')) {
-                // Создаем форму для отправки POST-запроса
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = '@Url.Action("Delete", "Documents")';
 
-                // Добавляем скрытое поле с ID документа
                 const idInput = document.createElement('input');
                 idInput.type = 'hidden';
                 idInput.name = 'id';
                 idInput.value = id;
                 form.appendChild(idInput);
 
-                // Добавляем токен защиты от CSRF
                 const tokenInput = document.createElement('input');
                 tokenInput.type = 'hidden';
                 tokenInput.name = '__RequestVerificationToken';
                 tokenInput.value = document.querySelector('input[name="__RequestVerificationToken"]').value;
                 form.appendChild(tokenInput);
 
-                // Добавляем форму на страницу и отправляем
                 document.body.appendChild(form);
                 form.submit();
             }
         }
 
-        // Filter functionality
         document.getElementById('typeFilter').addEventListener('change', applyFilters);
         document.getElementById('statusFilter').addEventListener('change', applyFilters);
         document.getElementById('dateFrom').addEventListener('change', applyFilters);
         document.getElementById('dateTo').addEventListener('change', applyFilters);
 
         function applyFilters() {
-            // Handle filtering
         }
     </script>
 }

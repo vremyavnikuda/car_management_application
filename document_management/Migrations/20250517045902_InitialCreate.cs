@@ -243,7 +243,6 @@ namespace document_management.Migrations
                 column: "DocumentId");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
